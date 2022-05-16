@@ -1,0 +1,341 @@
+.localliving-tilbud {
+  width: calc(100% - 20px);
+}
+#localliving-offer-list {
+  .filter-status {
+    width: 30%;
+    position: relative;
+  }
+  .offer-search-combine {
+    width: 58%;
+  }
+  .search-offer {
+    width: calc(12% - 60px);
+  }
+}
+#localliving-offer-list,
+#ferieboliger {
+  .filter-wrapper {
+    margin-bottom: 20px;
+    .filter-status {
+      &[data-color='red'] {
+        .select2-container--default .select2-selection--single .select2-selection__rendered::after {
+          background: #ff0000;
+        }
+      }
+      &[data-color='green'] {
+        .select2-container--default .select2-selection--single .select2-selection__rendered::after {
+          background: #9bbf11;
+        }
+      }
+      &[data-color='yellow'] {
+        .select2-container--default .select2-selection--single .select2-selection__rendered::after {
+          background: #fcd000;
+        }
+      }
+      &[data-color='black'] {
+        .select2-container--default .select2-selection--single .select2-selection__rendered::after {
+          background: #000;
+        }
+      }
+      &[data-color='orange'] {
+        .select2-container--default .select2-selection--single .select2-selection__rendered::after {
+          background: #fb8800;
+        }
+      }
+      &[data-color='oyr'] {
+        .select2-container--default .select2-selection--single .select2-selection__rendered::after {
+          width: 40px;
+          height: 20px;
+          left: 20px;
+          border-radius: unset;
+          background: url('../images/offer-status.png') no-repeat;
+          background-size: contain;
+        }
+      }
+      select {
+        width: 100%;
+      }
+      .select2-container--default {
+        .select2-selection--single {
+          border: 1px solid #c4c4c8;
+          border-radius: 0;
+          box-shadow: none;
+          font-size: 14px;
+          outline: 0;
+          line-height: 18px;
+          background: none;
+          height: 60px;
+          .select2-selection__rendered {
+            line-height: 60px;
+            padding-left: 66px;
+            position: relative;
+            &::after {
+              content: '';
+              height: 15px;
+              width: 15px;
+              position: absolute;
+              top: 50%;
+              border-radius: 50%;
+              left: 25px;
+              transform: translateY(-50%);
+            }
+          }
+          .select2-selection__arrow {
+            height: 58px;
+            right: 25px;
+            b {
+              display: none;
+            }
+            &::after {
+              content: '';
+              width: 20px;
+              height: 20px;
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              background: url('../images/chevron-down-outline.svg');
+            }
+          }
+          .select2-selection__placeholder {
+            color: #646970;
+          }
+        }
+      }
+      .select2-results {
+        padding-top: 15px;
+        padding-bottom: 15px;
+        li {
+          padding-left: 65px;
+          position: relative;
+          &:after {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            top: 45%;
+            left: 25px;
+            transform: translateY(-50%);
+          }
+          &[id$='green'] {
+            &:after {
+              background-color: #9bbf11;
+            }
+          }
+          &[id$='yellow'] {
+            &:after {
+              background-color: #fcd000;
+            }
+          }
+          &[id$='red'] {
+            &:after {
+              background-color: #ff0000;
+            }
+          }
+          &[id$='orange'] {
+            &:after {
+              background-color: #fb8800;
+            }
+          }
+          &[id$='black'] {
+            &:after {
+              background-color: #000;
+            }
+          }
+          &[id$='oyr'] {
+            &:after {
+              width: 25px;
+              height: 13px;
+              border-radius: unset;
+              background: url('../images/offer-status.png') no-repeat;
+              background-size: contain;
+            }
+          }
+        }
+      }
+    }
+    .filter-search {
+      position: relative;
+      &:before {
+        content: '';
+        background: url('../images/search-outline.svg');
+        background-size: contain;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        left: 20px;
+        height: 25px;
+        width: 25px;
+      }
+      input {
+        width: 100%;
+        padding: 20px 20px 20px 60px;
+        font-size: 14px;
+        outline: 0;
+        line-height: 18px;
+        margin: 0;
+      }
+    }
+  }
+}
+.offer-list-table {
+  width: 100%;
+  margin-bottom: 20px;
+  background-color: #fff;
+  border: 1px solid #c4c4c8;
+  tr {
+    border-bottom: 1px solid #c4c4c8;
+    td,
+    th {
+      padding: 10px 0;
+      &:last-child {
+        padding-right: 20px;
+      }
+    }
+    &:nth-child(odd) {
+      background-color: #fff;
+    }
+    &:nth-child(even) {
+      background-color: #f6f7f7;
+    }
+    &:last-child {
+      border: 0;
+    }
+  }
+  .offer-status-column {
+    .select2 {
+      &.select2-container--default {
+        .select2-selection--single {
+          border: 0;
+          background: transparent;
+          outline: 0;
+          .select2-selection__rendered {
+            font-size: 0;
+            &:after {
+              content: '';
+              position: absolute;
+              width: 15px;
+              height: 15px;
+              border-radius: 50%;
+              top: 45%;
+              left: 25px;
+              transform: translateY(-50%);
+            }
+            &[title$='green'] {
+              &:after {
+                background-color: #9bbf11;
+              }
+            }
+            &[title$='yellow'] {
+              &:after {
+                background-color: #fcd000;
+              }
+            }
+            &[title$='red'] {
+              &:after {
+                background-color: #ff0000;
+              }
+            }
+            &[title$='orange'] {
+              &:after {
+                background-color: #fb8800;
+              }
+            }
+            &[title$='black'] {
+              &:after {
+                background-color: #000;
+              }
+            }
+          }
+        }
+      }
+      b {
+        display: none;
+      }
+    }
+    .select2-container--open {
+      .select2-dropdown--above,
+      .select2-dropdown--below {
+        border: 1px solid #c4c4c8;
+      }
+    }
+    .select2-results {
+      &__option {
+        padding: 16px 10px;
+        font-size: 0;
+      }
+      li {
+        position: relative;
+        &:after {
+          content: '';
+          position: absolute;
+          width: 15px;
+          height: 15px;
+          border-radius: 50%;
+          top: 45%;
+          left: 25px;
+          transform: translateY(-50%);
+        }
+        &[id$='green'] {
+          &:after {
+            background-color: #9bbf11;
+          }
+        }
+        &[id$='yellow'] {
+          &:after {
+            background-color: #fcd000;
+          }
+        }
+        &[id$='red'] {
+          &:after {
+            background-color: #ff0000;
+          }
+        }
+        &[id$='orange'] {
+          &:after {
+            background-color: #fb8800;
+          }
+        }
+        &[id$='black'] {
+          &:after {
+            background-color: #000;
+          }
+        }
+      }
+    }
+  }
+  div[class^='offer-status'] {
+    width: 15px;
+    height: 15px;
+    background-color: #9bbf11;
+    border-radius: 50%;
+    margin: 0 auto;
+    &.offer-status-red {
+      background-color: #ff0000;
+    }
+    &.offer-status-yellow {
+      background-color: #fcd000;
+    }
+  }
+  a {
+    color: #688c00;
+    text-decoration: none;
+    &:hover {
+      color: #9bbf11;
+    }
+  }
+  .delete-offer,
+  .send-offer {
+    color: #688c00;
+    border: 0;
+    box-shadow: none;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+    &:hover {
+      color: #9bbf11;
+    }
+  }
+}

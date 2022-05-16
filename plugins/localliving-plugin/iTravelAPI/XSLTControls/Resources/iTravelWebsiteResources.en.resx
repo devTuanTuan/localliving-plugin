@@ -1,0 +1,819 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="from" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="till" xml:space="preserve">
+    <value>Till</value>
+  </data>
+  <data name="type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="accommodationType" xml:space="preserve">
+    <value>Accommodation type</value>
+  </data>
+  <data name="boatType" xml:space="preserve">
+    <value>Boat type</value>
+  </data>
+  <data name="country" xml:space="preserve">
+    <value>Country</value>
+  </data>
+  <data name="region" xml:space="preserve">
+    <value>Region</value>
+  </data>
+  <data name="destination" xml:space="preserve">
+    <value>Destination</value>
+  </data>
+  <data name="numberOfPersons" xml:space="preserve">
+    <value>Number of persons</value>
+  </data>
+  <data name="numberOfPersonsShort" xml:space="preserve">
+    <value>Persons</value>
+  </data>
+  <data name="category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="hotel" xml:space="preserve">
+    <value>Hotel</value>
+  </data>
+  <data name="appartment" xml:space="preserve">
+    <value>Apartment</value>
+  </data>
+  <data name="notRelevant" xml:space="preserve">
+    <value>Not relevant</value>
+  </data>
+  <data name="priceFrom" xml:space="preserve">
+    <value>Price from</value>
+  </data>
+  <data name="sendInquiry" xml:space="preserve">
+    <value>Request now</value>
+  </data>
+  <data name="book" xml:space="preserve">
+    <value>Book</value>
+  </data>
+  <data name="publicCode" xml:space="preserve">
+    <value>Public code</value>
+  </data>
+  <data name="note" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="showDetails" xml:space="preserve">
+    <value>Show details</value>
+  </data>
+  <data name="showPriceList" xml:space="preserve">
+    <value>Show price list</value>
+  </data>
+  <data name="availabilityCalendar" xml:space="preserve">
+    <value>Availability. Click on a green week to book your apartment</value>
+  </data>
+  <data name="minDays" xml:space="preserve">
+    <value>Min. days</value>
+  </data>
+  <data name="noPhoto" xml:space="preserve">
+    <value>No photo available</value>
+  </data>
+  <data name="priceTo" xml:space="preserve">
+    <value>Price to</value>
+  </data>
+  <data name="pet" xml:space="preserve">
+    <value>Pet</value>
+  </data>
+  <data name="perDay" xml:space="preserve">
+    <value>Per day</value>
+  </data>
+  <data name="perPerson" xml:space="preserve">
+    <value>Per person</value>
+  </data>
+  <data name="perPersonPerDay" xml:space="preserve">
+    <value>Per person per day</value>
+  </data>
+  <data name="total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="balcony" xml:space="preserve">
+    <value>Balcony</value>
+  </data>
+  <data name="distanceFromTheSea" xml:space="preserve">
+    <value>Distance from the sea</value>
+  </data>
+  <data name="hideDetails" xml:space="preserve">
+    <value>Hide details</value>
+  </data>
+  <data name="hidePriceList" xml:space="preserve">
+    <value>Hide price list</value>
+  </data>
+  <data name="priceType" xml:space="preserve">
+    <value>Price type</value>
+  </data>
+  <data name="basicInfo" xml:space="preserve">
+    <value>Basic information</value>
+  </data>
+  <data name="itinerary" xml:space="preserve">
+    <value>Itinerary</value>
+  </data>
+  <data name="reservations" xml:space="preserve">
+    <value>Reservations</value>
+  </data>
+  <data name="map" xml:space="preserve">
+    <value>Map</value>
+  </data>
+  <data name="numberOfDays" xml:space="preserve">
+    <value>Number of days</value>
+  </data>
+  <data name="numberOfDaysShort" xml:space="preserve">
+    <value>Days</value>
+  </data>
+  <data name="periods" xml:space="preserve">
+    <value>Periods</value>
+  </data>
+  <data name="transportation" xml:space="preserve">
+    <value>Transportation</value>
+  </data>
+  <data name="accommodation" xml:space="preserve">
+    <value>Accommodation</value>
+  </data>
+  <data name="period" xml:space="preserve">
+    <value>Period</value>
+  </data>
+  <data name="appartmentHouse" xml:space="preserve">
+    <value>Holiday apartment</value>
+  </data>
+  <data name="learnMore" xml:space="preserve">
+    <value>Learn more</value>
+  </data>
+  <data name="specialOffers" xml:space="preserve">
+    <value>Special offers</value>
+  </data>
+  <data name="priceList" xml:space="preserve">
+    <value>Prices in </value>
+  </data>
+  <data name="description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="characteristics" xml:space="preserve">
+    <value>Characteristics</value>
+  </data>
+  <data name="supplements" xml:space="preserve">
+    <value>Supplements</value>
+  </data>
+  <data name="searchStep" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="resultsStep" xml:space="preserve">
+    <value>Results</value>
+  </data>
+  <data name="detailsStep" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="reservationStep" xml:space="preserve">
+    <value>Reservation</value>
+  </data>
+  <data name="villa" xml:space="preserve">
+    <value>Villa</value>
+  </data>
+  <data name="smallHotel" xml:space="preserve">
+    <value>Small hotel</value>
+  </data>
+  <data name="perWeek" xml:space="preserve">
+    <value>Per week</value>
+  </data>
+  <data name="perPersonPerWeek" xml:space="preserve">
+    <value>Per person per week</value>
+  </data>
+  <data name="minPersons" xml:space="preserve">
+    <value>Min. persons</value>
+  </data>
+  <data name="homepage" xml:space="preserve">
+    <value>Homepage</value>
+  </data>
+  <data name="hideInfo" xml:space="preserve">
+    <value>Hide info</value>
+  </data>
+  <data name="itIsPossibleThat" xml:space="preserve">
+    <value>&lt;span class="green"&gt;It might be&lt;/span&gt; &lt;span class="black"&gt;because:&lt;/span&gt;</value>
+  </data>
+  <data name="moreInfo" xml:space="preserve">
+    <value>More info</value>
+  </data>
+  <data name="noResultsFound" xml:space="preserve">
+    <value>&lt;span class="grey"&gt;No results found&lt;/span&gt; &lt;span class="black"&gt; for your search&lt;/span&gt;
+</value>
+  </data>
+  <data name="reviewYourQuery" xml:space="preserve">
+    <value>Please repeat the search.</value>
+  </data>
+  <data name="errorNotAvailable" xml:space="preserve">
+    <value>The unit is not available</value>
+  </data>
+  <data name="checkAvailabilityAndPrices" xml:space="preserve">
+    <value>Check availability and prices</value>
+  </data>
+  <data name="days" xml:space="preserve">
+    <value>days</value>
+  </data>
+  <data name="persons" xml:space="preserve">
+    <value>persons</value>
+  </data>
+  <data name="searchParameters" xml:space="preserve">
+    <value>Search parameters</value>
+  </data>
+  <data name="for" xml:space="preserve">
+    <value>for</value>
+  </data>
+  <data name="nextPage" xml:space="preserve">
+    <value>Next photo</value>
+  </data>
+  <data name="pauseSlideshow" xml:space="preserve">
+    <value>Pause slideshow</value>
+  </data>
+  <data name="photo" xml:space="preserve">
+    <value>Photo</value>
+  </data>
+  <data name="playSlideshow" xml:space="preserve">
+    <value>Start slideshow</value>
+  </data>
+  <data name="previousPage" xml:space="preserve">
+    <value>&amp;lsaquo; previous</value>
+  </data>
+  <data name="previousPhoto" xml:space="preserve">
+    <value>‹ previous photo</value>
+  </data>
+  <data name="viewPhotoGallery" xml:space="preserve">
+    <value>View photo gallery</value>
+  </data>
+  <data name="dayOrDays" xml:space="preserve">
+    <value>days</value>
+  </data>
+  <data name="noRecommendedOffers" xml:space="preserve">
+    <value>(no recommended offers)</value>
+  </data>
+  <data name="serviceType" xml:space="preserve">
+    <value>Service type</value>
+  </data>
+  <data name="departures" xml:space="preserve">
+    <value>Departures</value>
+  </data>
+  <data name="select" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="choosePeriod" xml:space="preserve">
+    <value>Choose period</value>
+  </data>
+  <data name="showTheEntireOffer" xml:space="preserve">
+    <value>Show entire offer</value>
+  </data>
+  <data name="mondayShort" xml:space="preserve">
+    <value>M</value>
+  </data>
+  <data name="tuesdayShort" xml:space="preserve">
+    <value>T</value>
+  </data>
+  <data name="wednesdayShort" xml:space="preserve">
+    <value>W</value>
+  </data>
+  <data name="thursdayShort" xml:space="preserve">
+    <value>T</value>
+  </data>
+  <data name="fridayShort" xml:space="preserve">
+    <value>F</value>
+  </data>
+  <data name="saturdayShort" xml:space="preserve">
+    <value>S</value>
+  </data>
+  <data name="sundayShort" xml:space="preserve">
+    <value>S</value>
+  </data>
+  <data name="maxDays" xml:space="preserve">
+    <value>Max. days</value>
+  </data>
+  <data name="noAvailableAccommodationInGivenCategory" xml:space="preserve">
+    <value>There are no available accommodation units in category</value>
+  </data>
+  <data name="noAvailableAccommodationInGivenLocations" xml:space="preserve">
+    <value>There are no available accommodation units in location</value>
+  </data>
+  <data name="noAvailableAccommodationInGivenTime" xml:space="preserve">
+    <value>There are no available accommodation units in period</value>
+  </data>
+  <data name="errorOversized" xml:space="preserve">
+    <value>The number of persons exceeds the maximum for the accommodation.</value>
+  </data>
+  <data name="nextPhoto" xml:space="preserve">
+    <value>next photo ›</value>
+  </data>
+  <data name="noAvailablePackageTourInGivenCategory" xml:space="preserve">
+    <value>There are no available tours in category</value>
+  </data>
+  <data name="noAvailablePackageTourInGivenLocations" xml:space="preserve">
+    <value>There are no available tours in location</value>
+  </data>
+  <data name="noAvailablePackageTourInGivenTime" xml:space="preserve">
+    <value>There are no available tours in period</value>
+  </data>
+  <data name="basic" xml:space="preserve">
+    <value>Basic</value>
+  </data>
+  <data name="discounts" xml:space="preserve">
+    <value>Discounts</value>
+  </data>
+  <data name="validFor" xml:space="preserve">
+    <value>valid for</value>
+  </data>
+  <data name="onlyOnSpecialOffer" xml:space="preserve">
+    <value>Show special offers</value>
+  </data>
+  <data name="minStay" xml:space="preserve">
+    <value>Min stay</value>
+  </data>
+  <data name="action" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="serviceCannotBeShorterThan" xml:space="preserve">
+    <value>Service cannot last less then</value>
+  </data>
+  <data name="gallery" xml:space="preserve">
+    <value>Gallery</value>
+  </data>
+  <data name="view" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="changeSearchCriteria" xml:space="preserve">
+    <value>Change search criteria</value>
+  </data>
+  <data name="hotelDescription" xml:space="preserve">
+    <value>Hotel description</value>
+  </data>
+  <data name="roomPricesShow" xml:space="preserve">
+    <value>Show room prices</value>
+  </data>
+  <data name="roomPricesHide" xml:space="preserve">
+    <value>Hide room prices</value>
+  </data>
+  <data name="testimonials" xml:space="preserve">
+    <value>Testimonials</value>
+  </data>
+  <data name="activities" xml:space="preserve">
+    <value>Activities</value>
+  </data>
+  <data name="advancedSearch" xml:space="preserve">
+    <value>Advanced search</value>
+  </data>
+  <data name="agrotourism" xml:space="preserve">
+    <value>Agritourism</value>
+  </data>
+  <data name="aircondition" xml:space="preserve">
+    <value>Air condition</value>
+  </data>
+  <data name="apartmentHouse" xml:space="preserve">
+    <value>The apartment building</value>
+  </data>
+  <data name="breakfast" xml:space="preserve">
+    <value>Breakfast</value>
+  </data>
+  <data name="cityHotel" xml:space="preserve">
+    <value>City hotel</value>
+  </data>
+  <data name="cleaningIncluded" xml:space="preserve">
+    <value>Final cleaning</value>
+  </data>
+  <data name="clearSearch" xml:space="preserve">
+    <value>Clear search</value>
+  </data>
+  <data name="cookingSchool" xml:space="preserve">
+    <value>Cooking school</value>
+  </data>
+  <data name="cycling" xml:space="preserve">
+    <value>Cycling</value>
+  </data>
+  <data name="dishwasher" xml:space="preserve">
+    <value>Dishwasher</value>
+  </data>
+  <data name="distanceToTheSeaIsLessThan20km" xml:space="preserve">
+    <value>Max. &lt;strong&gt;20 km&lt;/strong&gt; to the sea</value>
+  </data>
+  <data name="distanceToTownLessThan2km" xml:space="preserve">
+    <value>Max. &lt;strong&gt;2 km&lt;/strong&gt; to city</value>
+  </data>
+  <data name="enlargeMap" xml:space="preserve">
+    <value>Enlarge map</value>
+  </data>
+  <data name="facilities" xml:space="preserve">
+    <value>Facilities</value>
+  </data>
+  <data name="hideAdvancedSearch" xml:space="preserve">
+    <value>Hide advanced search</value>
+  </data>
+  <data name="holidayHouse" xml:space="preserve">
+    <value>Casa Vacanza</value>
+  </data>
+  <data name="informations" xml:space="preserve">
+    <value>Informations</value>
+  </data>
+  <data name="internet" xml:space="preserve">
+    <value>Internet</value>
+  </data>
+  <data name="location" xml:space="preserve">
+    <value>Location</value>
+  </data>
+  <data name="maxPersons" xml:space="preserve">
+    <value>Max. persons</value>
+  </data>
+  <data name="noPool" xml:space="preserve">
+    <value>No pool</value>
+  </data>
+  <data name="opisKategorije" xml:space="preserve">
+    <value>We assess each house on a scale 3-5, where 5 is the best score. During the evaluation we took into account cost, quality, and the x-factor and determine the overall rating. Ratings have been calculated with the heart, and so very personal.</value>
+  </data>
+  <data name="ownProductionOfOilCheeseOrWine" xml:space="preserve">
+    <value>Own production of oil, cheese or wine</value>
+  </data>
+  <data name="pets" xml:space="preserve">
+    <value>Pets</value>
+  </data>
+  <data name="pingPong" xml:space="preserve">
+    <value>Table tennis</value>
+  </data>
+  <data name="placeHasLivestock" xml:space="preserve">
+    <value>Place has livestock</value>
+  </data>
+  <data name="playground" xml:space="preserve">
+    <value>Playground</value>
+  </data>
+  <data name="pool" xml:space="preserve">
+    <value>Pool</value>
+  </data>
+  <data name="privateTerrace" xml:space="preserve">
+    <value>Private terrace</value>
+  </data>
+  <data name="privateVilla" xml:space="preserve">
+    <value>Private villa</value>
+  </data>
+  <data name="resort" xml:space="preserve">
+    <value>Resort</value>
+  </data>
+  <data name="restaurant" xml:space="preserve">
+    <value>Restaurant</value>
+  </data>
+  <data name="salesOfOwnProducts" xml:space="preserve">
+    <value>Sales of own products</value>
+  </data>
+  <data name="searchByName" xml:space="preserve">
+    <value>Search by name</value>
+  </data>
+  <data name="tennis" xml:space="preserve">
+    <value>Tennis</value>
+  </data>
+  <data name="vegetableGarden" xml:space="preserve">
+    <value>Vegetable garden</value>
+  </data>
+  <data name="wineTasting" xml:space="preserve">
+    <value>Wine tasting</value>
+  </data>
+  <data name="ascending" xml:space="preserve">
+    <value>ascending</value>
+  </data>
+  <data name="descending" xml:space="preserve">
+    <value>descending</value>
+    <comment>faldende</comment>
+  </data>
+  <data name="hideMap" xml:space="preserve">
+    <value>hide map</value>
+    <comment>skjul kort</comment>
+  </data>
+  <data name="resultsOnMap" xml:space="preserve">
+    <value>Search results on a map</value>
+  </data>
+  <data name="showMap" xml:space="preserve">
+    <value>show map</value>
+  </data>
+  <data name="sortByPrice" xml:space="preserve">
+    <value>Sort by price</value>
+  </data>
+  <data name="sortByStars" xml:space="preserve">
+    <value>Sort by stars</value>
+  </data>
+  <data name="numberOfAdultsShort" xml:space="preserve">
+    <value>Number of adults</value>
+  </data>
+  <data name="notAvailable" xml:space="preserve">
+    <value>Occupied</value>
+  </data>
+  <data name="unableToCalculatePrice" xml:space="preserve">
+    <value>Price can't be calculated please try another arrival or departure date.</value>
+  </data>
+  <data name="noBookingBecauseOfSaturday" xml:space="preserve">
+    <value>Unfortunately it is not possible to book the time selected. (Remember that often in high season it must be Saturday – Saturday stays)</value>
+  </data>
+  <data name="barbecue" xml:space="preserve">
+    <value>Barbecue</value>
+  </data>
+  <data name="childrensPool" xml:space="preserve">
+    <value>Childrens pool</value>
+  </data>
+  <data name="cook" xml:space="preserve">
+    <value>Cook</value>
+  </data>
+  <data name="dinner" xml:space="preserve">
+    <value>Dinner</value>
+  </data>
+  <data name="fitness" xml:space="preserve">
+    <value>Fitness</value>
+  </data>
+  <data name="footballField" xml:space="preserve">
+    <value>Football field</value>
+  </data>
+  <data name="horseBackRiding" xml:space="preserve">
+    <value>Horse back riding</value>
+  </data>
+  <data name="noPets" xml:space="preserve">
+    <value>No pets allowed</value>
+  </data>
+  <data name="ownAnimals" xml:space="preserve">
+    <value>Own animals</value>
+  </data>
+  <data name="ownersOwnCooking" xml:space="preserve">
+    <value>Owners own cooking</value>
+  </data>
+  <data name="sauna" xml:space="preserve">
+    <value>Sauna</value>
+  </data>
+  <data name="veryChildFrendly" xml:space="preserve">
+    <value>Very child friendly</value>
+  </data>
+  <data name="veryVeryQuiet" xml:space="preserve">
+    <value>Very, very quiet</value>
+  </data>
+  <data name="volleyBall" xml:space="preserve">
+    <value>Volley ball</value>
+  </data>
+  <data name="washingMachine" xml:space="preserve">
+    <value>Washing machine</value>
+  </data>
+  <data name="wellness" xml:space="preserve">
+    <value>Wellness</value>
+  </data>
+  <data name="boxSearchTitle" xml:space="preserve">
+    <value>Find your holiday home</value>
+  </data>
+  <data name="horseBackRiding1" xml:space="preserve">
+    <value>Horse back Riding</value>
+  </data>
+  <data name="tennisAtTheProperty" xml:space="preserve">
+    <value>Tennis at the property</value>
+  </data>
+  <data name="llFamily" xml:space="preserve">
+    <value>Local Living Family</value>
+  </data>
+  <data name="llLuxury" xml:space="preserve">
+    <value>Local Living Luxury</value>
+  </data>
+  <data name="llSport" xml:space="preserve">
+    <value>Local Living Sport</value>
+  </data>
+  <data name="llTeambuilding" xml:space="preserve">
+    <value>Local Living Teambuilding</value>
+  </data>
+  <data name="llWedding" xml:space="preserve">
+    <value>Local Living Wedding</value>
+  </data>
+  <data name="llWellness" xml:space="preserve">
+    <value>Local Living Wellness</value>
+  </data>
+  <data name="llWine" xml:space="preserve">
+    <value>Local Living Wine</value>
+  </data>
+  <data name="tema" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="liguria" xml:space="preserve">
+    <value>Liguria</value>
+  </data>
+  <data name="tuscany" xml:space="preserve">
+    <value>Tuscany</value>
+  </data>
+  <data name="umbria" xml:space="preserve">
+    <value>Umbria</value>
+  </data>
+  <data name="boxSearchTitle2" xml:space="preserve">
+    <value>Find your holiday home with Local Living</value>
+  </data>
+  <data name="moreCriteria" xml:space="preserve">
+    <value>More search criteria</value>
+  </data>
+  <data name="optionalSearchTitle" xml:space="preserve">
+    <value>My wish (optional):</value>
+  </data>
+  <data name="LearnMoreAndBook" xml:space="preserve">
+    <value>Learn more and book</value>
+  </data>
+  <data name="addToWishList" xml:space="preserve">
+    <value>Add to favorites</value>
+  </data>
+  <data name="removeFromWishList" xml:space="preserve">
+    <value>Remove from favorites</value>
+  </data>
+  <data name="favorites" xml:space="preserve">
+    <value>Favorites</value>
+  </data>
+  <data name="noFavoritesFound" xml:space="preserve">
+    <value>You do not have any favorites yet. Browse on and click the star to favorite the holiday home.</value>
+  </data>
+  <data name="specialOffers28DaysSummary" xml:space="preserve">
+    <value>Special offers next 28 days</value>
+  </data>
+  <data name="availableWeeks" xml:space="preserve">
+    <value>Available weeks</value>
+  </data>
+  <data name="callForMoreInfo" xml:space="preserve">
+    <value>Call for more information</value>
+  </data>
+  <data name="callForMoreInfoPhoneNumber" xml:space="preserve">
+    <value>+45 28 15 72 41</value>
+  </data>
+  <data name="categoryDescription" xml:space="preserve">
+    <value>We review each country house on a scale of 3 to 5, with 5 being the best category. We have looked at price, quality and x-factor and come up with a comprehensive review, which is largely made with the heart, and therefore is very personal.</value>
+  </data>
+  <data name="guestsSay" xml:space="preserve">
+    <value>Guests say</value>
+  </data>
+  <data name="priceListForWholeApartment" xml:space="preserve">
+    <value>Price list in Euro</value>
+  </data>
+	<data name="priceListForWholeVilla" xml:space="preserve">
+    <value>Price list in Euro</value>
+  </data>	
+	<data name="week" xml:space="preserve">
+    <value>Week</value>
+  </data>
+  <data name="Sea" xml:space="preserve">
+    <value>Sea</value>
+  </data>
+  <data name="shopping" xml:space="preserve">
+    <value>Shopping</value>
+  </data>
+  <data name="FoodShopping" xml:space="preserve">
+    <value>Food shopping</value>
+  </data>
+  <data name="Village" xml:space="preserve">
+    <value>Village</value>
+  </data>
+  <data name="seFerieboligen" xml:space="preserve">
+    <value>LEARN MORE</value>
+  </data>
+  <data name="ViewAccommodation" xml:space="preserve">
+    <value>Show more</value>
+  </data>
+  <data name="holidayHomeIsNotAvailable" xml:space="preserve">
+    <value>Holiday home is not available for the booked dates. Try to change the search dates</value>
+  </data>
+  <data name="checkOtherDates" xml:space="preserve">
+    <value>Check accommodations on other dates</value>
+  </data>
+  <data name="weekAfter" xml:space="preserve">
+    <value>The week after</value>
+  </data>
+  <data name="weekBefore" xml:space="preserve">
+    <value>The week before</value>
+  </data>
+  <data name="weFoundNoResults" xml:space="preserve">
+    <value>We are sorry, we found no accommodations to match your search</value>
+  </data>
+  <data name="noPropertySubTitle" xml:space="preserve">
+    <value>We have many other properties and you can make a new search on our site:</value>
+  </data>
+  <data name="noPropertyTitle" xml:space="preserve">
+    <value>Unfortunately, this property is no longer in our program.</value>
+  </data>
+  <data name="noPropertyURL" xml:space="preserve">
+    <value>https://www.localliving.dk/en/online-booking/</value>
+  </data>
+  <data name="noOfHomes" xml:space="preserve">
+    <value>ferieboliger passer til dine ønsker</value>
+  </data>
+  <data name="weFound" xml:space="preserve">
+    <value>We found</value>
+  </data>
+</root>

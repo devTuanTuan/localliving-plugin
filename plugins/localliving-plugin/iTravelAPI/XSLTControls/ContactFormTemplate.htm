@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title></title>
+</head>
+<body>
+	<div id="contactFormTemplate" contactformtemplate="1">
+		<!-- inclusions -->
+		<link href="/iTravel/XSLTControls/Css/forma.css" rel="stylesheet" type="text/css" />
+		<link href="/iTravel/XSLTControls/Script/jquery/themes/cupertino/jquery-ui-1.8.2.custom.css" rel="stylesheet" type="text/css" />
+		
+		<script>window.jQuery.ui || document.write('<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js">\x3C/script>')</script>
+		
+		<input type="hidden" id="resourcesInput" resourcesinput="1" />
+		<input type="hidden" id="guidInput" guidInput="1" />
+		<input type="hidden" id="languageInput" languageInput="1" />
+		<!-- the labels' attribute names are the same as the translation keys... this will make tha assignment much easier-->
+		<div class="rowForTwoColumns" formData='1'>
+			<div class="columnLeft">
+				<label id="nameLabel" name="1">
+				</label>
+			</div>
+			<div class="columnRight">
+				<input id="nameInput" nameinput="1" type="text" mandatory="1" />
+			</div>
+		</div>
+		<div class="rowForTwoColumns" formData='1'>
+			<div class="columnLeft">
+				<label id="surnameLabel" surname="1">
+				</label>
+			</div>
+			<div class="columnRight">
+				<input id="surnameInput" surnameinput="1" type="text" mandatory="1" />
+			</div>
+		</div>
+		<div class="rowForTwoColumns" formData='1'>
+			<div class="columnLeft">
+				<label id="emailAddressLabel" email="1">
+				</label>
+			</div>
+			<div class="columnRight">
+				<input id="emailAddressInput" emailinput="1" type="text" mandatory="1" />
+			</div>
+		</div>
+		<div class="rowForTwoColumns" formData='1'>
+			<div class="columnLeft">
+				<label id="telephoneLabel" telephone="1">
+				</label>
+			</div>
+			<div class="columnRight">
+				<input id="telephoneInput" telephoneinput="1" type="text" />
+			</div>
+		</div>
+		<div class="rowForTwoColumns" formData='1'>
+			<div class="columnLeft">
+				<label id="productLabel" product="1">
+				</label>
+			</div>
+			<div class="columnRight">
+				<input id="productInput" productinput="1" type="text" />
+			</div>
+		</div>
+		<div class="rowForTwoColumns" formData='1'>
+			<div class="columnLeft">
+				<label id="productTypeLabel" productType="1">
+				</label>
+			</div>
+			<div class="columnRight">
+				<input id="productTypeInput" producttypeinput="1" type="text" />
+			</div>
+		</div>
+		<div class="rowForTwoColumns" formData='1'>
+			<div class="columnLeft">
+				<label id="numberOfPersonsLabel" numberOfPersons="1">
+				</label>
+			</div>
+			<div class="columnRight">
+				<input id="numberOfPersonsInput" numberOfPersonsInput="1" type="text" />
+			</div>
+		</div>
+		<div class="rowForTwoColumns" formData='1'>
+			<div class="columnLeft">
+				<label id="dateFromLabel" dateFrom="1">
+				</label>
+			</div>
+			<div class="columnRight">
+				<input type="text"
+					   id="dateFromContactForm"
+					   dateFromInput="1"
+					   name="dateFromContactForm"
+					   class="datePickerInput" />
+				<img src="/itravel/XSLTControls/Css/images/date-picker.gif"
+					 alt=""
+					 name="dateFromContactFormPicker"
+					 onclick="jQuery('#dateFromContactForm').datepicker('show');"/>
+			</div>
+		</div>
+		<div class="rowForTwoColumns" formData='1'>
+			<div class="columnLeft">
+				<label id="dateToLabel" dateTo="1">
+				</label>
+			</div>
+			<div class="columnRight">
+				<input type="text"
+					   id="dateToContactForm"
+					   dateToInput="1"
+					   name="dateToContactForm"
+					   class="datePickerInput" />
+				<img src="/itravel/XSLTControls/Css/images/date-picker.gif"
+					 alt=""
+					 name="dateToContactFormPicker"
+					 onclick="jQuery('#dateToContactForm').datepicker('show');"/>
+			</div>
+		</div>
+		<div class="rowForTwoColumns" formData='1'>
+			<div class="columnLeft">
+				<label id="commentLabel" comment="1">
+				</label>
+			</div>
+			<div class="columnRight">
+				<textarea id="commentTextArea" commenttextareaInput="1" cols="16" rows="5" />
+			</div>
+		</div>
+		<div class="rowForTwoColumns">
+			<div class="columnBoth">
+				<label id="pleaseFillCharactersLabel" pleasefillcharacters='1'>
+				</label>
+			</div>
+		</div>
+		<div class="rowForTwoColumns">
+			<div class="columnLeft">
+				<img src="" id="captchaImg" captchaimg="1" />
+			</div>
+			<div class="columnRight">
+				<input type="button" class="" id="refreshCaptchaButton" refresh="1" />
+			</div>
+		</div>
+		<div class="rowForTwoColumns">
+			<div class="columnLeft">
+				<input id="captchaInput" captchaInput="1" type="text" class="captchaInput" />
+			</div>
+			<div class="columnRight">
+				<input type="button" class="" id="submitButton" submit="1" />
+			</div>
+		</div>
+	</div>
+</body>
+</html>

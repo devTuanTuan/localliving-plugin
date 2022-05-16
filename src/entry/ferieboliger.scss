@@ -1,0 +1,350 @@
+.localliving-ferieboliger,
+.localliving-rediger-feriebolig {
+  width: calc(100% - 20px);
+}
+#ferieboliger {
+  .filter-wrapper {
+    .ferieboliger-status {
+      width: 30%;
+    }
+    .ferieboliger-combine {
+      width: 58%;
+    }
+    .search-ferieboliger {
+      width: calc(12% - 60px);
+      button {
+        width: 100%;
+      }
+    }
+  }
+  .above-result-list-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    #set-supplier-btn {
+      padding: 8px 15px;
+      border-radius: 3px;
+    }
+    .view-options-wrapper {
+      label {
+        margin-right: 20px;
+        &:last-child {
+          margin-right: 0;
+        }
+      }
+    }
+  }
+  .ferieboliger-result-list {
+    table {
+      width: 100%;
+      th,
+      td {
+        background-color: #fff;
+        padding: 10px 20px;
+        &.no-padding {
+          padding: 0;
+          padding-top: 5px;
+          background-color: #f0f0f1;
+        }
+        .btn-primary {
+          padding: 8px 15px;
+          border-radius: 3px;
+          width: auto;
+          margin-left: auto;
+          background-color: #5d7118;
+        }
+        .name {
+          border: 0;
+          background: transparent;
+          box-shadow: none;
+          outline: 0;
+          padding: 0;
+          &:hover {
+            color: #9bbf11;
+          }
+        }
+        &.status-column,
+        &.checkbox-column {
+          padding: 10px 0 10px 10px;
+        }
+        &.checkbox-column {
+          width: 30px;
+        }
+      }
+      th {
+        font-size: 14px;
+        &.checkbox-wrapper {
+          padding-left: 31px;
+          padding-right: 0;
+        }
+        &.name-column {
+          padding-left: 31px;
+        }
+      }
+      thead {
+        border: 1px solid #c4c4c8;
+        th {
+          &:last-child {
+            padding-right: 20px;
+          }
+        }
+      }
+      td {
+        .accommodation-name {
+          color: #000;
+          text-decoration: none;
+          &:hover {
+            color: #9bbf11;
+          }
+        }
+        .accommodation-column {
+          div[class^='accommodation-ical-status'] {
+            margin: 0;
+            margin-right: 10px;
+          }
+        }
+        .date-column {
+          padding-left: 30px;
+        }
+      }
+      .table-inside {
+        border: 1px solid #c4c4c8;
+        padding: 10px;
+        thead {
+          border: 0;
+          th {
+            padding-bottom: 0;
+            &:last-child {
+              padding-right: 41px;
+              padding-left: 0;
+            }
+            &.name-column {
+              padding-left: 31px;
+              #select-all-supplier-checkbox {
+                margin-right: 10px;
+              }
+            }
+          }
+        }
+        td {
+          &:last-child {
+            padding-right: 20px;
+          }
+        }
+      }
+      .table-child-wrapper {
+        border: 1px solid #c4c4c8;
+        border-top: 0;
+        padding: 20px;
+      }
+      .table-child {
+        border: 1px solid #c4c4c8;
+        & > tbody > tr:nth-of-type(even) > * {
+          background-color: #f6f7f7;
+        }
+        td.name-column {
+          padding: 10px 20px 10px 10px;
+        }
+      }
+    }
+  }
+}
+
+.ical-wrapper {
+  padding: 20px;
+  border: 1px solid #c4c4c8;
+  .ical-table {
+    & > tbody {
+      & > tr {
+        & > th {
+          padding: 5px 0;
+        }
+      }
+    }
+  }
+  .ical-table-inside {
+    border: 1px solid #c4c4c8;
+    th,
+    td {
+      padding: 5px;
+    }
+    & > tbody {
+      & > tr {
+        &:nth-child(odd) {
+          background-color: #fff;
+        }
+        &:nth-child(even) {
+          background-color: #f6f7f7;
+        }
+      }
+    }
+    .ical-table-unit {
+      border-bottom: 1px solid #c4c4c8;
+    }
+  }
+  .icon {
+    font-size: 20px;
+    font-weight: 400;
+  }
+}
+
+#set-supplier-modal {
+  .modal-content {
+    padding: 45px;
+    text-align: center;
+    border-radius: 0;
+    .set-supplier-title {
+      padding-bottom: 30px;
+      font-weight: 400;
+    }
+    .accomodation-selected {
+      padding-bottom: 30px;
+      font-size: 16px;
+    }
+    .choose-supplier {
+      font-size: 18px;
+      font-weight: 400;
+      text-align: left;
+    }
+    .supplier-selector {
+      padding: 10px 0 20px 0;
+      text-align: left;
+    }
+    button[type='submit'] {
+      padding: 10px 65px;
+      margin: 0 auto;
+      font-size: 16px;
+      width: auto;
+      border-radius: 2px;
+    }
+  }
+  .select2-container {
+    .select2-selection--single {
+      height: 36px;
+      outline: 0;
+      .select2-selection__rendered {
+        line-height: 36px;
+      }
+      .select2-selection__arrow {
+        height: 34px;
+        right: 10px;
+        b {
+          display: none;
+        }
+        &::after {
+          content: '';
+          width: 20px;
+          height: 20px;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: url('../images/chevron-down-outline.svg');
+        }
+      }
+    }
+  }
+}
+.edit-ical-link {
+  font-size: 14px;
+  background-color: #fff;
+  border: 1px solid #c4c4c8;
+  padding: 25px;
+  .edit-ical-link-title {
+    font-weight: normal;
+    margin-bottom: 30px;
+  }
+  .btn {
+    font-size: 14px;
+  }
+  .edit-ical {
+    &-label {
+      margin-bottom: 5px;
+    }
+    &-section {
+      margin-bottom: 10px;
+      width: 20%;
+      input {
+        width: 100%;
+        padding: 5px 10px;
+        border: 1px solid #c4c4c8;
+        border-radius: 0;
+      }
+    }
+  }
+  .ical-table {
+    .add-unit-type {
+      cursor: pointer;
+      padding: 5px;
+    }
+    .remove-new-unit-type {
+      cursor: pointer;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      padding: 5px;
+      outline: 0;
+    }
+    .ical-link-column {
+      padding-left: 13px;
+    }
+  }
+  .download-csv {
+    padding-left: 10px;
+    button {
+      padding: 8px;
+      line-height: 22px;
+      border: 1px solid #c4c4c8;
+      border-radius: 0;
+      margin-right: 5px;
+    }
+  }
+  .set-available {
+    padding-left: 30px;
+    .edit-ical-label {
+      margin-bottom: 12px;
+    }
+  }
+  .footer-btn-wrapper {
+    padding-top: 20px;
+  }
+  .footer-btn-save {
+    padding: 10px 80px;
+    border-radius: 2px;
+  }
+  .footer-btn-cancel {
+    padding: 10px 40px;
+    border-radius: 2px;
+  }
+}
+#ferieboliger,
+.edit-ical-link {
+  div[class^='accommodation-ical-status'] {
+    width: 15px;
+    height: 15px;
+    background-color: #9bbf11;
+    border-radius: 50%;
+    margin: 0 auto;
+    &.accommodation-ical-status-red {
+      background-color: #ff0000;
+    }
+    &.accommodation-ical-status-yellow {
+      background-color: #fcd000;
+    }
+    &.accommodation-ical-status-orange {
+      background-color: #fb8800;
+    }
+    &.accommodation-ical-status-grey {
+      background-color: #bababa;
+    }
+  }
+}
+
+@media (min-width: 576px) {
+  #set-supplier-modal {
+    .modal-dialog {
+      max-width: 615px;
+    }
+  }
+}

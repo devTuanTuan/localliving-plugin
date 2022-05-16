@@ -1,0 +1,9 @@
+._.DS_Store
+/.idea
+**/node_modules
+.env
+composer.lock
+vendor
+release
+/dist
+**/.unison.*
