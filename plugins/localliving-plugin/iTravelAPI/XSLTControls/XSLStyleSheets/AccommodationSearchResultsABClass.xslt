@@ -318,7 +318,7 @@
                   <div class="article-wrapper {$region-hor-line-class}">
                     <article class="row search-results-row">
                       <div class="col-md-2 article-image">
-                        <a href="{$objectFinalURL}" title="{$AccommodationName}">
+                        <a href="{$ImageSource}" title="{$AccommodationName}" data-toggle="lightbox">
                           <img class="lazy" data-src="{$ImageSource}">
                             <xsl:attribute name="alt">
                               <xsl:choose>
@@ -488,7 +488,7 @@
                                       <xsl:for-each select="PhotoList/Photo">
                                         <xsl:if test="position()=1">
                                           <!--First image template-->
-                                          <a href="{PhotoUrl}" class="unit-gallery transition-slow" title="">
+                                          <a href="{PhotoUrl}" class="unit-gallery transition-slow" title="" data-toggle="lightbox">
                                             <img class="lazy" data-src="{ThumbnailUrl}" alt="{AlternateText}"/>
                                             <span class="icon"></span>
                                           </a>
@@ -904,7 +904,7 @@
                   <div class="article-wrapper {$region-hor-line-class}">
                     <article class="row search-results-row">
                       <div class="col-md-2 article-image">
-                        <a href="{$objectFinalURL}" title="{$AccommodationName}">
+                        <a href="{$ImageSource}" title="{$AccommodationName}" data-toggle="lightbox">
                           <img class="lazy" data-src="{$ImageSource}">
                             <xsl:attribute name="alt">
                               <xsl:choose>
@@ -1074,7 +1074,7 @@
                                       <xsl:for-each select="PhotoList/Photo">
                                         <xsl:if test="position()=1">
                                           <!--First image template-->
-                                          <a href="{PhotoUrl}" class="unit-gallery transition-slow" title="">
+                                          <a href="{PhotoUrl}" class="unit-gallery transition-slow" title="" data-toggle="lightbox">
                                             <img class="lazy" data-src="{ThumbnailUrl}" alt="{AlternateText}"/>
                                             <span class="icon"></span>
                                           </a>

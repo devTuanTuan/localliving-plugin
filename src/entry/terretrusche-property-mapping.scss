@@ -1,0 +1,30 @@
+.localliving-terretrusche-property-mapping {
+  width: calc(100% - 20px);
+}
+.terretrusche_property_mapping_table {
+  width: 100%;
+  margin-bottom: 20px;
+  background-color: #fff;
+  border: 1px solid #c4c4c8;
+}
+.terretrusche_property_mapping_table td,
+.terretrusche_property_mapping_table th {
+  padding: 10px 20px;
+}
+.terretrusche_property_mapping_table tr {
+  border-bottom: 1px solid #c4c4c8;
+  background-color: #fff;
+}
+.terretrusche_property_mapping_table tr:nth-child(even) {
+  background-color: #f6f7f7;
+}
+#add-new-mapping-modal label,#edit-mapping-modal label {
+  width: 100%;
+}
+#add-new-mapping-modal input,#edit-mapping-modal input{
+  width: 100%;
+  padding: 5px 10px;
+  border: 1px solid #c4c4c8;
+  border-radius: 0;
+  margin: 10px 0;
+}

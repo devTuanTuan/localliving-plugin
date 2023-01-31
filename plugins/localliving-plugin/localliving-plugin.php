@@ -16,12 +16,45 @@ $localliving_plg_db_version = '1.0';
 | CONSTANTS
 |--------------------------------------------------------------------------
 */
-if (!defined('LL_PLUGIN_URL')) {
-    define('LL_PLUGIN_URL', plugin_dir_url(__FILE__));
-    define('THEME_URL', get_template_directory_uri());
-    define('PDF_LOGS', WP_PLUGIN_DIR . '/localliving-plugin/pdf_logs/');
+if (!defined('LL_PLUGIN_URL'))
+{
+	define('LL_PLUGIN_URL', plugin_dir_url(__FILE__));
+}
+
+if (!defined('WP_PLUGIN_DIR'))
+{
+	define( 'WP_PLUGIN_DIR', WP_CONTENT_DIR . '/plugins/' );
+	
+}
+
+if (!defined('THEME_URL'))
+{
+	define('THEME_URL', get_template_directory_uri());
+}
+
+if (!defined('PDF_LOGS'))
+{
+	define('PDF_LOGS', WP_PLUGIN_DIR . '/localliving-plugin/pdf_logs/');
+}
+
+if (!defined('CSV_LOGS'))
+{
 	define('CSV_LOGS', WP_PLUGIN_DIR . '/localliving-plugin/csv_logs/');
+}
+
+if (!defined('TERRETRUSCHE_PATH'))
+{
+	define('TERRETRUSCHE_PATH', ABSPATH . '/terretrusche/');
+}
+
+if (!defined('COMPRESS_IMAGES_LOGS'))
+{
 	define('COMPRESS_IMAGES_LOGS', WP_PLUGIN_DIR . '/localliving-plugin/compress_images_logs/');
+}
+
+if (!defined('ABSPATH'))
+{
+	define('ABSPATH', dirname(__FILE__));
 }
 
 /*
@@ -41,6 +74,7 @@ class localliving_plugin
         add_action('init', function () {
             ob_start();
         });
+	    add_action('init', array( &$this, 'css_js_versioning'));
         add_action('wp_logout', array( &$this, 'destroy_session' ));
         add_action('admin_menu', array( &$this,'localliving_register_menu'));
         add_action('admin_enqueue_scripts', array( &$this,'enqueue_script_style'));
@@ -48,12 +82,20 @@ class localliving_plugin
 		    if (is_admin ())
 			    wp_enqueue_media ();
 	    } );
+		add_action('wp_head', array( &$this,'append_latest_update_date_to_page_content'));
         add_action('wp_ajax_add_to_cart', array( &$this,'add_to_cart'));
         add_action('wp_ajax_remove_from_cart', array( &$this,'remove_from_cart'));
 		add_action('wp_ajax_toggle_exception',array( &$this, 'toggle_exception' ));
-		add_action('wp_ajax_toggle_generate_csv_mode', array( &$this, 'toggle_generate_csv_mode' ));
+	    add_action('wp_ajax_toggle_pause_auto_update',array( &$this, 'toggle_pause_auto_update' ));
+		add_action('wp_ajax_toggle_unit_generate_csv_mode', array( &$this, 'toggle_unit_generate_csv_mode' ));
+		add_action('wp_ajax_unit_merge_type_update', array( &$this, 'unit_merge_type_update' ));
 		add_action('wp_ajax_manual_edit_offer_status', array( &$this, 'manual_edit_offer_status' ));
+	    add_action('wp_ajax_get_latest_update_date', array( &$this,'get_latest_update_date'));
+	    add_action('wp_ajax_nopriv_get_latest_update_date', array( &$this,'get_latest_update_date'));
+	    add_action('wp_ajax_get_record_property_mapping', array( &$this,'get_record_property_mapping'));
         add_action('localliving_plg_daily_cron', array( &$this,'ll_daily_cron'));
+	    add_action('localliving_plg_generate_csv_and_upload_itravel_cron', array( &$this,'ll_generate_csv_and_upload_itravel_cron'));
+	    add_action('localliving_plg_sync_data_from_itravel', array( &$this,'ll_sync_data_from_itravel'));
         register_activation_hook(__FILE__, array( &$this,'localliving_plg_db_install'));
     }
     
@@ -95,6 +137,16 @@ class localliving_plugin
                 include_once('ferieboliger.php');
             }
         );
+	    add_submenu_page(
+		    "localliving",
+		    "Terretrusche Property Mapping",
+		    "Terretrusche Property Mapping",
+		    'manage_options',
+		    "terretrusche_property_mapping",
+		    function () {
+			    include_once('terretrusche_property_mapping.php');
+		    }
+	    );
         add_submenu_page(
             null,
             'Generer PDF',
@@ -153,14 +205,56 @@ class localliving_plugin
     {
         unset($_SESSION['localliving_cart']);
     }
+	
+	public function append_latest_update_date_to_page_content()
+	{
+		global $post;
+		$postId = get_the_ID();
+		
+		if($postId == 101) {
+			echo '
+			<script>
+				jQuery(document).ready(function ($) {
+					$.ajax({
+						type: "POST",
+                		dataType: "text",
+                		url: "' . admin_url("admin-ajax.php") . '",
+                		data: {
+                            action: "get_latest_update_date"
+                		},
+                		context: this,
+                		success: function(response) {
+		                    $("#latest-update-date").replaceWith(response);
+                		}
+					});
+				});
+			</script>
+			';
+		}
+	}
+	
+	public function get_latest_update_date()
+	{
+		global $wpdb;
+		
+		$table_name_units_ical_reminders = $wpdb->prefix . 'localliving_plg_units_ical_reminders';
+		
+		$latestUpdateTime = $wpdb->get_var("
+	        SELECT MAX(reminder_updated_timestamp) FROM $table_name_units_ical_reminders
+    	");
+		
+		echo date('d.m.Y', $latestUpdateTime);
+		exit;
+	}
     
     public function add_to_cart()
     {
-        $dateFrom = $_POST['dateFrom'] == '' ?
+        $dateFrom        = $_POST['dateFrom'] == '' ?
             date('d/m/Y') : $_POST['dateFrom'];
-        $dateTo   = $_POST['dateTo'] == '' ?
+        $dateTo          = $_POST['dateTo'] == '' ?
             date('d/m/Y', strtotime('+7 days')) : $_POST['dateTo'];
-        $dateRange = implode('-', array($dateFrom, $dateTo));
+        $dateRange       = implode('-', array($dateFrom, $dateTo));
+		$selectedPersons = $_POST['selectedPersons'] ?? 1;
         
         if (isset($_POST['objectId']) && isset($_POST['unitId'])) {
             $objectId = $_POST['objectId'];
@@ -168,28 +262,42 @@ class localliving_plugin
             
             if (is_array($unitId)) {
                 $_SESSION['localliving_cart'][$dateRange][$objectId][] = $objectId;
+	
+	            $_SESSION['localliving_cart'][$dateRange]['selectedPersons'][$objectId] = $selectedPersons;
                 
                 foreach ($unitId as $id) {
                     $_SESSION['localliving_cart'][$dateRange][$objectId][] = $id;
+					
+	                $_SESSION['localliving_cart'][$dateRange]['selectedPersons'][$id] = $selectedPersons;
                 }
                 $_SESSION['localliving_cart'][$dateRange][$objectId]
                     = array_unique($_SESSION['localliving_cart'][$dateRange][$objectId]);
             } else {
                 $_SESSION['localliving_cart'][$dateRange][$objectId][] = $unitId;
+	
+	            $_SESSION['localliving_cart'][$dateRange]['selectedPersons'][$unitId] = $selectedPersons;
             }
         } else {
             $objectId = $_POST['objectId'];
     
             $_SESSION['localliving_cart'][$dateRange][$objectId][] = $objectId;
+	
+	        $_SESSION['localliving_cart'][$dateRange]['selectedPersons'][$objectId] = $selectedPersons;
         }
+	
+//	    $_SESSION['localliving_cart'][$dateRange]['selectedPersons'] = $selectedPersons;
         
         $total = 0;
 
         if (isset($_SESSION['localliving_cart'])) {
             $cart = $_SESSION['localliving_cart'];
-            
-            foreach ($cart as $cartItem) {
-                $total += count($cartItem);
+	
+	        foreach ($cart as $cartItem) {
+		        foreach ($cartItem as $key => $selectedAccommodation) {
+			        if(is_numeric($key)) {
+				        $total += 1;
+			        }
+		        }
             }
         }
 
@@ -270,10 +378,21 @@ class localliving_plugin
 		
 		global $wpdb;
 		
+		$table_name_suppliers      = $wpdb->prefix . 'localliving_plg_suppliers';
 		$table_name_accommodations = $wpdb->prefix . 'localliving_plg_accommodations';
 		
 		if($toggleMode == 'on') {
 			if($supplierId != '') {
+				
+				$data = array(
+					'supplier_exception_status' => '1'
+				);
+				
+				$where = array(
+					'supplier_id' => $supplierId
+				);
+				
+				$wpdb->update($table_name_suppliers, $data, $where);
 				
 				$query = "SELECT $table_name_accommodations.accommodation_id, $table_name_accommodations.accommodation_exception_status
 					FROM $table_name_accommodations
@@ -282,9 +401,7 @@ class localliving_plugin
 				$accommodationObjList = $wpdb->get_results($query);
 				
 				foreach ($accommodationObjList as $accommodationObj) {
-					if($accommodationObj->accommodation_exception_status == '0'
-						|| $accommodationObj->accommodation_exception_status == ''
-					) {
+					if($accommodationObj->accommodation_exception_status == '0') {
 						$data = array(
 							'accommodation_exception_status' => '1',
 							'accommodation_set_exception_time' => time()
@@ -307,9 +424,7 @@ class localliving_plugin
 				
 				$obj = $wpdb->get_row($query);
 				
-				if($obj->accommodation_exception_status == '0'
-					|| $obj->accommodation_exception_status == ''
-				) {
+				if($obj->accommodation_exception_status == '0') {
 					$data = array(
 						'accommodation_exception_status' => '1',
 						'accommodation_set_exception_time' => time()
@@ -322,8 +437,19 @@ class localliving_plugin
 					$wpdb->update($table_name_accommodations, $data, $where);
 				}
 			}
-		} else {
+		}
+		else {
 			if($supplierId != '') {
+				
+				$data = array(
+					'supplier_exception_status' => '0'
+				);
+				
+				$where = array(
+					'supplier_id' => $supplierId
+				);
+				
+				$wpdb->update($table_name_suppliers, $data, $where);
 				
 				$query = "SELECT $table_name_accommodations.accommodation_id
 					FROM $table_name_accommodations
@@ -363,40 +489,161 @@ class localliving_plugin
 		die;
 	}
 	
-	public function toggle_generate_csv_mode() {
-		$editAccommodationId      = '';
-		$toggleMode               = '';
+	public function toggle_pause_auto_update() {
+		$supplierId      = '';
+		$accommodationId = '';
+		$toggleMode      = '';
 		
-		if(isset($_POST['editAccommodationId'])) {
-			$editAccommodationId = $_POST['editAccommodationId'];
+		if(isset($_POST['supplierId'])) {
+			$supplierId = $_POST['supplierId'];
+		}
+		
+		if(isset($_POST['accommodationId'])) {
+			$accommodationId = $_POST['accommodationId'];
 		}
 		
 		if(isset($_POST['mode'])) {
 			$toggleMode = $_POST['mode'];
 		}
 		
-		if($editAccommodationId != '') {
-			global $wpdb;
-			$table_name_accommodations = $wpdb->prefix . 'localliving_plg_accommodations';
-			
-			if($toggleMode == "on") {
-				$data = array(
-					"accommodation_csv_generate_mode" => '1'
-				);
+		global $wpdb;
+		
+		$table_name_suppliers      = $wpdb->prefix . 'localliving_plg_suppliers';
+		$table_name_accommodations = $wpdb->prefix . 'localliving_plg_accommodations';
+		
+		if($toggleMode == 'on') {
+			if($supplierId != '') {
+				$query = "SELECT $table_name_accommodations.accommodation_id, $table_name_accommodations.accommodation_auto_update_pause
+					FROM $table_name_accommodations
+					WHERE $table_name_accommodations.accommodation_supplier_id = $supplierId";
 				
-			} else {
-				$data = array(
-					"accommodation_csv_generate_mode" => '0'
-				);
+				$accommodationObjList = $wpdb->get_results($query);
 				
+				foreach ($accommodationObjList as $accommodationObj) {
+					if($accommodationObj->accommodation_auto_update_pause == '0') {
+						$data = array(
+							'accommodation_auto_update_pause' => '1'
+						);
+						
+						$where = array(
+							'accommodation_id' => $accommodationObj->accommodation_id
+						);
+						
+						$wpdb->update($table_name_accommodations, $data, $where);
+					}
+				}
 			}
 			
+			if($accommodationId != '') {
+				
+				$query = "SELECT $table_name_accommodations.accommodation_auto_update_pause
+					FROM $table_name_accommodations
+					WHERE $table_name_accommodations.accommodation_id = $accommodationId";
+				
+				$obj = $wpdb->get_row($query);
+				
+				if($obj->accommodation_auto_update_pause == '0') {
+					$data = array(
+						'accommodation_auto_update_pause' => '1'
+					);
+					
+					$where = array(
+						'accommodation_id' => $accommodationId
+					);
+					
+					$wpdb->update($table_name_accommodations, $data, $where);
+				}
+			}
+		}
+		else {
+			if($supplierId != '') {
+				
+				$query = "SELECT $table_name_accommodations.accommodation_id
+					FROM $table_name_accommodations
+					WHERE $table_name_accommodations.accommodation_supplier_id = $supplierId";
+				
+				$accommodationObjList = $wpdb->get_results($query);
+				
+				foreach ($accommodationObjList as $accommodationObj) {
+					$data = array(
+						'accommodation_auto_update_pause' => '0'
+					);
+					
+					$where = array(
+						'accommodation_id' => $accommodationObj->accommodation_id
+					);
+					
+					$wpdb->update($table_name_accommodations, $data, $where);
+				}
+			}
+			
+			if($accommodationId != '') {
+				
+				$data = array(
+					'accommodation_auto_update_pause' => '0'
+				);
+				
+				$where = array(
+					'accommodation_id' => $accommodationId
+				);
+				
+				$wpdb->update($table_name_accommodations, $data, $where);
+			}
+		}
+	}
+	
+	public function toggle_unit_generate_csv_mode() {
+		$editUnitId = $_POST['editUnitId'] ?? '';
+		$toggleMode = $_POST['mode']       ?? '';
+
+		if($editUnitId != '') {
+			
+			global $wpdb;
+			
+			$table_name_units = $wpdb->prefix . 'localliving_plg_units';
+
+			if($toggleMode == "on") {
+				
+				$data = array(
+					"unit_generate_csv_mode" => '1'
+				);
+			} else {
+				
+				$data = array(
+					"unit_generate_csv_mode" => '0'
+				);
+			}
+
 			$where = array(
-				"accommodation_id" => $editAccommodationId
+				"unit_id" => $editUnitId
+			);
+
+			$wpdb->update($table_name_units, $data, $where);
+		}
+
+		exit;
+	}
+	
+	public function unit_merge_type_update() {
+		$editUnitId     = $_POST['editUnitId'] ?? '';
+		$mergeTypeValue = $_POST['mergeTypeValue'] ?? 0;
+		
+		if($editUnitId != '') {
+			global $wpdb;
+			$table_name_units = $wpdb->prefix . 'localliving_plg_units';
+			
+			$data = array(
+				"unit_merge_type" => $mergeTypeValue
 			);
 			
-			$wpdb->update($table_name_accommodations, $data, $where);
+			$where = array(
+				"unit_id" => $editUnitId
+			);
+			
+			$wpdb->update($table_name_units, $data, $where);
 		}
+		
+		echo 'success';
 		
 		die;
 	}
@@ -431,15 +678,39 @@ class localliving_plugin
 		
 		die;
 	}
+	
+	public function get_record_property_mapping() {
+		global $wpdb;
+		
+		if(!isset($_POST['recordId'])) {
+			return false;
+		}
+		
+		$editRecordId = $_POST['recordId'];
+		
+		$table_name_terretrusche_property_map = $wpdb->prefix . 'localliving_plg_terretrusche_property_map';
+		
+		$query = "SELECT *
+        FROM $table_name_terretrusche_property_map
+        WHERE $table_name_terretrusche_property_map.id = $editRecordId";
+		
+		$queryResult = $wpdb->get_row($query);
+		
+		echo json_encode($queryResult);
+		exit;
+	}
     
     public function enqueue_script_style($hook_suffix)
     {
         if (is_admin()) {
-            if($hook_suffix == "toplevel_page_localliving" || 
+            if(
+				$hook_suffix == "toplevel_page_localliving" ||
                 $hook_suffix == "local-living_page_tilbud" || 
                 $hook_suffix == "local-living_page_ferieboliger" ||
                 $hook_suffix == "admin_page_generer_pdf" ||
-                $hook_suffix == "admin_page_rediger_feriebolig") {
+                $hook_suffix == "admin_page_rediger_feriebolig" ||
+                $hook_suffix == "local-living_page_terretrusche_property_mapping"
+            ) {
                 //styles
                 wp_register_style(
                     'bootstrap5',
@@ -532,6 +803,13 @@ class localliving_plugin
                     false,
                     true
                 );
+	            wp_register_script(
+		            'bs5-lightbox',
+		            LL_PLUGIN_URL . '/assets/bs5-lightbox/dist/index.bundle.min.js',
+		            array('jquery'),
+		            false,
+		            true
+	            );
 
                 wp_enqueue_script('jquery');
                 wp_enqueue_script('localliving_script_dist');
@@ -543,9 +821,32 @@ class localliving_plugin
                 wp_enqueue_script('bootstrap_datepicker_locales');
 				wp_enqueue_script('bootstrap5');
 				wp_enqueue_script('bootstrap-toggle');
+	            wp_enqueue_script('bs5-lightbox');
             }
         }
     }
+	
+	function set_custom_ver_css_js( $src ) {
+		// style.css URI
+		$style_file = get_stylesheet_directory().'/style.css';
+		
+		if ( $style_file ) {
+			// css file timestamp
+			$version = filemtime($style_file);
+			
+			if ( strpos( $src, 'ver=' ) )
+				// use the WP function add_query_arg()
+				// to set the ver parameter in
+				$src = add_query_arg( 'ver', $version, $src );
+		}
+		
+		return esc_url( $src );
+	}
+	
+	function css_js_versioning() {
+		add_filter( 'style_loader_src', array($this, 'set_custom_ver_css_js'), 9999 ); 	// css files versioning
+		add_filter( 'script_loader_src', array($this, 'set_custom_ver_css_js'), 9999 ); // js files versioning
+	}
     
     public function localliving_plg_db_install()
     {
@@ -585,7 +886,6 @@ class localliving_plugin
     			accommodation_id int(9) NOT NULL,
     			accommodation_supplier_id int(9),
                 accommodation_name text NOT NULL,
-                accommodation_csv_generate_mode int(1),
                 accommodation_exception_status int(1),
                 accommodation_set_exception_time text,
                 PRIMARY KEY  (accommodation_id),
@@ -599,6 +899,8 @@ class localliving_plugin
     			unit_id int(9) NOT NULL,
     			unit_accommodation_id int(9),
     			unit_name text NOT NULL,
+    			unit_merge_type int(1),
+    			unit_generate_csv_mode int(1),
     			unit_unique_ref text,
     			PRIMARY KEY  (unit_id),
     			FOREIGN KEY  (unit_accommodation_id) REFERENCES $table_name_accommodations(accommodation_id)
@@ -646,199 +948,6 @@ class localliving_plugin
 		
 		    dbDelta($sql);
 		    add_option("localliving_plg_db_version", $localliving_plg_db_version);
-		
-		    //pulling Suppliers data from iTravel API
-		    $getAllCustomersRequest = new \LocalLiving_Plugin\iTravelAPI\GetCustomers();
-		    $suppliersList = $getAllCustomersRequest->getAllSuppliers();
-		
-		    foreach ($suppliersList as $supplier) {
-				$supplierId    = $supplier->CustomerID ?? "";
-				$supplierName  = $supplier->CompanyName ?? "";
-				$supplierEmail = $supplier->Email ?? "";
-				
-				$supplierExisted = $this->supplierExisted($supplierId);
-				
-				if($supplierExisted) {
-					$data = array(
-						"supplier_name" => $supplierName,
-						"supplier_email" => $supplierEmail
-					);
-					
-					$where = array(
-						"supplier_id" => $supplierId
-					);
-					
-					$wpdb->update($table_name_suppliers, $data, $where);
-					
-					$log = "Supplier [".$supplierId."] ". $supplierName . " updated";
-				} else {
-					$data = array(
-						"supplier_id" => $supplierId,
-						"supplier_name" => $supplierName,
-						"supplier_email" => $supplierEmail
-					);
-					
-					$wpdb->insert($table_name_suppliers, $data);
-					
-					$log = "Supplier [".$supplierId."] ". $supplierName . " inserted";
-				}
-			    $this->wh_log($log);
-		    }
-		
-		    $getSearchResultsRequest = new \LocalLiving_Plugin\iTravelAPI\GetSearchResults();
-		    $getSearchResultsRequest->ignorePriceAndAvailability = true;
-		    $getSearchResultsRequest->pageSize = 99999; //get all data
-		    $getSearchResultsResponse = $getSearchResultsRequest->GetAPIResponse();
-		    
-		    //pulling Accommodations & Units data from iTravel API
-		    if($this->countDataByTable($table_name_accommodations) <= 0
-			    && $this->countDataByTable($table_name_units) <= 0) {
-
-			    if (isset($getSearchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject)) {
-				    $accommodationsList =
-					    $getSearchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject;
-
-				    foreach ($accommodationsList as $accommodation) {
-						$accommodationId   = $accommodation->ObjectID ?? '';
-						$accommodationName = $accommodation->Name     ?? '';
-						
-					    $data = array(
-						    "accommodation_id"                 => $accommodationId,
-						    "accommodation_name"               => $accommodationName,
-						    "accommodation_csv_generate_mode"  => '0',
-						    "accommodation_exception_status"   => '0',
-						    "accommodation_set_exception_time" => ''
-					    );
-
-					    $wpdb->insert($table_name_accommodations, $data);
-						
-						$log = "Accommodation [".$accommodationId."] ". $accommodationName . " inserted";
-						$this->wh_log($log);
-						
-					    if (isset($accommodation->UnitList->AccommodationUnit)) {
-						    $unitList = $accommodation->UnitList->AccommodationUnit;
-						
-						    foreach ($unitList as $unit) {
-							    $unitName = '';
-							
-							    if (isset($unit->AttributeGroupList->AttributeGroup[0]->AttributeList->Attribute)) {
-								    $unitAttributesList = $unit->AttributeGroupList->AttributeGroup[0]->AttributeList->Attribute;
-								
-								    foreach ($unitAttributesList as $unitAttribute) {
-									    if ($unitAttribute->AttributeID == 133) {
-										    $unitName = $unitAttribute->AttributeValue;
-									    }
-								    }
-							    }
-								
-								$unitId = $unit->UnitID ?? "";
-								$unitAccommodationId = $accommodation->ObjectID ?? "";
-							
-							    $data = array(
-								    "unit_id" => $unitId,
-								    "unit_accommodation_id" => $unitAccommodationId,
-								    "unit_name" => $unitName
-							    );
-							
-							    $wpdb->insert($table_name_units, $data);
-							
-							    $log = "Unit [".$unitId."] ". $unitName . " inserted";
-							    $this->wh_log($log);
-						    }
-					    }
-				    }
-			    }
-		    }
-			else {
-				if (isset($getSearchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject)) {
-					$accommodationsList =
-						$getSearchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject;
-					
-					foreach ($accommodationsList as $accommodation) {
-						$accommodationId   = $accommodation->ObjectID ?? "";
-						$accommodationName = $accommodation->Name     ?? "";
-						
-						$accommodationExisted = $this->accommodationExisted($accommodationId);
-						
-						if($accommodationExisted) {
-							$data = array(
-								"accommodation_name" => $accommodationName
-							);
-							
-							$where = array(
-								"accommodation_id" => $accommodationId
-							);
-							
-							$wpdb->update($table_name_accommodations, $data, $where);
-							
-							$log = "Accommodation [".$accommodationId."] ". $accommodationName . " updated";
-						}
-						else {
-							$data = array(
-								"accommodation_id"                 => $accommodationId,
-								"accommodation_name"               => $accommodationName,
-								"accommodation_csv_generate_mode"  => '0',
-								"accommodation_exception_status"   => '0',
-								"accommodation_set_exception_time" => ''
-							);
-							
-							$wpdb->insert($table_name_accommodations, $data);
-							
-							$log = "Accommodation [".$accommodationId."] ". $accommodationName . " inserted";
-						}
-						
-						$this->wh_log($log);
-						
-						if (isset($accommodation->UnitList->AccommodationUnit)) {
-							$unitList = $accommodation->UnitList->AccommodationUnit;
-							
-							foreach ($unitList as $unit) {
-								$unitName = '';
-								
-								if (isset($unit->AttributeGroupList->AttributeGroup[0]->AttributeList->Attribute)) {
-									$unitAttributesList = $unit->AttributeGroupList->AttributeGroup[0]->AttributeList->Attribute;
-									
-									foreach ($unitAttributesList as $unitAttribute) {
-										if ($unitAttribute->AttributeID == 133) {
-											$unitName = $unitAttribute->AttributeValue;
-										}
-									}
-								}
-								
-								$unitId = $unit->UnitID ?? "";
-								
-								$unitExisted = $this->unitExisted($unitId);
-								
-								if($unitExisted) {
-									$data = array(
-										"unit_name" => $unitName,
-										"unit_accommodation_id" => $accommodationId
-									);
-									
-									$where = array(
-										"unit_id" => $unitId
-									);
-									
-									$wpdb->update($table_name_units, $data, $where);
-									
-									$log = "Unit [".$unitId."] ". $unitName . " updated";
-								} else {
-									$data = array(
-										"unit_id" => $unitId,
-										"unit_accommodation_id" => $accommodationId,
-										"unit_name" => $unitName
-									);
-									
-									$wpdb->insert($table_name_units, $data);
-									
-									$log = "Unit [".$unitId."] ". $unitName . " inserted";
-								}
-								$this->wh_log($log);
-							}
-						}
-					}
-				}
-		    }
 			
 			if($this->countDataByTable($table_name_options) <= 0) {
 				$data = array(
@@ -911,20 +1020,23 @@ class localliving_plugin
 		return (int) $wpdb->get_var("SELECT COUNT(*) from $table_name");
 	}
 	
-	public function wh_log($log_msg)
+	public function write_log($log_msg, $log_file_name = 'cron.log')
 	{
-		$log_folder_name = $_SERVER['DOCUMENT_ROOT'] . "/log";
-		if (!file_exists($log_folder_name))
+		$log_file_path = ABSPATH . $log_file_name;
+		
+		if(!file_exists($log_file_path))
 		{
-			// create directory/folder uploads.
-			mkdir($log_folder_name, 0777, true);
+			touch($log_file_path);
 		}
-		$log_file_data = $log_folder_name.'/log_' . date('d-m-Y') . '.log';
-		file_put_contents($log_file_data, $log_msg . "\n", FILE_APPEND);
+		
+		file_put_contents($log_file_path, $log_msg . "\n", FILE_APPEND);
 	}
 	
     public function ll_daily_cron()
     {
+	    $this->write_log('[ll_daily_cron] started at: ' . date('Y-m-d H:i:s'));
+	    $this->write_log('[ll_daily_cron] is running...');
+		
         global $wpdb;
     
 		$table_name_accommodations       = $wpdb->prefix . 'localliving_plg_accommodations';
@@ -1046,9 +1158,186 @@ class localliving_plugin
 				unlink($file);
 			}
 		}
+	
+	    $this->write_log('[ll_daily_cron] finished at: ' . date('Y-m-d H:i:s'));
     }
-}
+	
+	public function ll_generate_csv_and_upload_itravel_cron() {
+		$this->write_log('[ll_generate_csv_and_upload_itravel_cron] started at: ' . date('Y-m-d H:i:s'));
+		$this->write_log('[ll_generate_csv_and_upload_itravel_cron] is running...');
+		
+		$defaultMaxExecTime = ini_get('max_execution_time');
+		
+		ini_set('max_execution_time', '7200');
+		
+		require WP_PLUGIN_DIR . '/localliving-plugin/Rediger_FerieboligHelper.php';
+		
+		$thisYear = date("Y");
+		$nextYear = $thisYear + 1;
+		$fileNameThisYear = "auto_upload_itravel_$thisYear.csv";
+		$filePathThisYear = CSV_LOGS . $fileNameThisYear;
+		if(file_exists($filePathThisYear)) {
+			unlink($filePathThisYear);
+		}
+		$fileNameNextYear = "auto_upload_itravel_$nextYear.csv";
+		$filePathNextYear = CSV_LOGS . $fileNameNextYear;
+		if(file_exists($filePathNextYear)) {
+			unlink($filePathNextYear);
+		}
+		
+//		$jsPath   = WP_PLUGIN_DIR . '/localliving-plugin/assets/auto_upload_puppeteer.js';
+		
+		Rediger_FerieboligHelper::terretruscheFtpDownloadBookingFile();
+		
+		Rediger_FerieboligHelper::generateCsvByYear($thisYear, '', $filePathThisYear, false);
+		Rediger_FerieboligHelper::generateCsvByYear($nextYear, '', $filePathNextYear, false);
+		
+//		$triggerCmd = "node $jsPath $filePath";
 
+//		$triggerResult = exec($triggerCmd, $output);
+
+//		$this->wh_log($triggerCmd);
+		
+		ini_set('max_execution_time', $defaultMaxExecTime);
+		
+		$this->write_log('[ll_generate_csv_and_upload_itravel_cron] finished at: ' . date('Y-m-d H:i:s'));
+	}
+	
+	public function ll_sync_data_from_itravel() {
+		$this->write_log('[ll_sync_data_from_itravel_cron] started at: ' . date('Y-m-d H:i:s'));
+		$this->write_log('[ll_sync_data_from_itravel_cron] is running...');
+		
+		global $wpdb;
+		
+		$table_name_suppliers      = $wpdb->prefix . 'localliving_plg_suppliers';
+		$table_name_accommodations = $wpdb->prefix . 'localliving_plg_accommodations';
+		$table_name_units          = $wpdb->prefix . 'localliving_plg_units';
+		
+		//pulling Suppliers data from iTravel API
+		$getAllCustomersRequest = new \LocalLiving_Plugin\iTravelAPI\GetCustomers();
+		$suppliersList = $getAllCustomersRequest->getAllSuppliers();
+		
+		foreach ($suppliersList as $supplier) {
+			$supplierId    = $supplier->CustomerID ?? "";
+			$supplierName  = $supplier->CompanyName ?? "";
+			$supplierEmail = $supplier->Email ?? "";
+			
+			$supplierExisted = $this->supplierExisted($supplierId);
+			
+			if($supplierExisted) {
+				$data = array(
+					"supplier_name" => $supplierName,
+					"supplier_email" => $supplierEmail
+				);
+				
+				$where = array(
+					"supplier_id" => $supplierId
+				);
+				
+				$wpdb->update($table_name_suppliers, $data, $where);
+				
+//				$log = "Supplier [".$supplierId."] ". $supplierName . " updated";
+			} else {
+				$data = array(
+					"supplier_id" => $supplierId,
+					"supplier_name" => $supplierName,
+					"supplier_email" => $supplierEmail
+				);
+				
+				$wpdb->insert($table_name_suppliers, $data);
+				
+//				$log = "Supplier [".$supplierId."] ". $supplierName . " inserted";
+			}
+		}
+		
+		$getSearchResultsRequest = new \LocalLiving_Plugin\iTravelAPI\GetSearchResults();
+		$getSearchResultsRequest->ignorePriceAndAvailability = true;
+		$getSearchResultsRequest->pageSize = 99999; //get all data
+		$getSearchResultsResponse = $getSearchResultsRequest->GetAPIResponse();
+		
+		//pulling Accommodations & Units data from iTravel API
+		if (isset($getSearchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject)) {
+			$accommodationsList =
+				$getSearchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject;
+			
+			foreach ($accommodationsList as $accommodation) {
+				$accommodationId   = $accommodation->ObjectID ?? "";
+				$accommodationName = $accommodation->Name     ?? "";
+				
+				$accommodationExisted = $this->accommodationExisted($accommodationId);
+				
+				if($accommodationExisted) {
+					$data = array(
+						"accommodation_name" => $accommodationName
+					);
+					
+					$where = array(
+						"accommodation_id" => $accommodationId
+					);
+					
+					$wpdb->update($table_name_accommodations, $data, $where);
+				}
+				else {
+					$data = array(
+						"accommodation_id"                 => $accommodationId,
+						"accommodation_name"               => $accommodationName,
+						"accommodation_exception_status"   => '0',
+						"accommodation_set_exception_time" => ''
+					);
+					
+					$wpdb->insert($table_name_accommodations, $data);
+				}
+				
+				if (isset($accommodation->UnitList->AccommodationUnit)) {
+					$unitList = $accommodation->UnitList->AccommodationUnit;
+					
+					foreach ($unitList as $unit) {
+						$unitName = '';
+						
+						if (isset($unit->AttributeGroupList->AttributeGroup[0]->AttributeList->Attribute)) {
+							$unitAttributesList = $unit->AttributeGroupList->AttributeGroup[0]->AttributeList->Attribute;
+							
+							foreach ($unitAttributesList as $unitAttribute) {
+								if ($unitAttribute->AttributeID == 133) {
+									$unitName = $unitAttribute->AttributeValue;
+								}
+							}
+						}
+						
+						$unitId = $unit->UnitID ?? "";
+						
+						$unitExisted = $this->unitExisted($unitId);
+						
+						if($unitExisted) {
+							$data = array(
+								"unit_name" => $unitName,
+								"unit_accommodation_id" => $accommodationId
+							);
+							
+							$where = array(
+								"unit_id" => $unitId
+							);
+							
+							$wpdb->update($table_name_units, $data, $where);
+						} else {
+							$data = array(
+								"unit_id"                => $unitId,
+								"unit_accommodation_id"  => $accommodationId,
+								"unit_merge_type"        => "0",
+								"unit_generate_csv_mode" => "0",
+								"unit_name"              => $unitName
+							);
+							
+							$wpdb->insert($table_name_units, $data);
+						}
+					}
+				}
+			}
+		}
+		
+		$this->write_log('[ll_sync_data_from_itravel_cron] finished at: ' . date('Y-m-d H:i:s'));
+	}
+}
 
 // instantiate plugin's class
 $GLOBALS['localliving_plugin'] = new localliving_plugin();

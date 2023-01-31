@@ -89,7 +89,7 @@
 		$offerName = $result->offer_name;
 		
 		if ($offerName != '') {
-			$folder = explode('_', $offerName)[0];
+			$folder = explode('_', $offerName)[1];
 			$fileDestination = PDF_LOGS . $folder . '/' . $offerName . '.pdf';
 			
 			if (file_exists($fileDestination)) {
@@ -209,7 +209,7 @@
         <div class="loader"></div>
     </div>
 </div>
-<div class="localliving-tilbud">
+<div class="localliving-tilbud" style="display:none">
     <div class="header sticky top-menu">
         <div class="page-title top-menu-left">
             <h1>Tilbud</h1>
@@ -228,8 +228,12 @@
 	                if (isset($_SESSION['localliving_cart'])) {
 		                $cart = $_SESSION['localliving_cart'];
 		
-		                foreach ($cart as $selectedAccommodation) {
-			                $total += count($selectedAccommodation);
+		                foreach ($cart as $selectedAccommodations) {
+			                foreach ($selectedAccommodations as $key => $selectedAccommodation) {
+				                if(is_numeric($key)) {
+					                $total += 1;
+				                }
+			                }
 		                }
 	                }
 	

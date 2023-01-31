@@ -97,7 +97,7 @@ div.header {
     padding-bottom: 30px;
 }
 div.user-info-desc {
-    width: 65%;
+    width: 63%;
     float: left;
 }
 div.user-info-contact {
@@ -110,7 +110,7 @@ div.location {
     padding-bottom: 30px;
 }
 div.location-map {
-    width: 65%;
+    width: 62%;
     float: left;
     padding: 0;
 }

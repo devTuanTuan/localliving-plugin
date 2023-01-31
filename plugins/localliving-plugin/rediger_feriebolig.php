@@ -1,19 +1,43 @@
 <?php
 
 require_once(__DIR__ . '/vendor/autoload.php');
+require_once(WP_PLUGIN_DIR . '/localliving-plugin/Rediger_FerieboligHelper.php');
 
-use League\Csv\Reader;
-use League\Csv\Writer;
+$accommodationData           = array();
+$editIcalLinkAccommodationId = '';
 
-include_once ('ics.php');
-
-const WEEK_START_SATURDAY = -1;
-const WEEK_END_SATURDAY   = 6;
+if(isset($_POST['EditIcalLinkAccommodationId']) || $_SESSION['EditIcalLinkAccommodationId']) {
+    $editIcalLinkAccommodationId = $_POST['EditIcalLinkAccommodationId'] ?? '';
+    
+    if($editIcalLinkAccommodationId == '') {
+        $editIcalLinkAccommodationId = $_SESSION['EditIcalLinkAccommodationId'] ?? '';
+    }
+    
+    $_SESSION['EditIcalLinkAccommodationId'] = $editIcalLinkAccommodationId;
+    $accommodationData = Rediger_FerieboligHelper::getAccommodationData($editIcalLinkAccommodationId);
+}
 
 add_action('admin_footer', function () {
+	$editIcalLinkAccommodationId = '';
+ 
+	if(isset($_POST['EditIcalLinkAccommodationId']) || $_SESSION['EditIcalLinkAccommodationId']) {
+		$editIcalLinkAccommodationId = $_POST['EditIcalLinkAccommodationId'] ?? '';
+		
+		if($editIcalLinkAccommodationId == '') {
+			$editIcalLinkAccommodationId = $_SESSION['EditIcalLinkAccommodationId'];
+		}
+		
+		$_SESSION['EditIcalLinkAccommodationId'] = $editIcalLinkAccommodationId;
+	}
+    
     echo '
     <script>
     jQuery(document).ready(function ($) {
+        var unitsListJson = `'.getUnitsListByAccommodationId($editIcalLinkAccommodationId, true).'`;
+        var unitsList = JSON.parse(unitsListJson);
+        
+        console.log(unitsList);
+        
         $(document).on("click", "#cancel-edit-ical-link", function(e) {
             e.preventDefault();
             
@@ -23,21 +47,81 @@ add_action('admin_footer', function () {
         //add row
         $(document).on("click", ".add-unit-type", function() {
             var unitId = $(this).data("unit-id");
+            var mergeType = $(this).parents(".accommodation-unit-row").find(".select-merge-type").val();
+            var html = ``;
             
-			var html = `
-				<tr>
+            if(mergeType === "'.UNIT_MERGE_TYPE_UNIT_TYPES.'") {
+                html += `
+				<tr class="new-unit-type-row">
 					<td><input class="w-100" type="text" name="NewUnitTypeName[`+unitId+`][]"/></td>
+					<td></td>
+					<td></td>
 					<td align="center">
-						<span class="icon remove-new-unit-type">−</span>
+						<span class="icon remove-new-unit-type" data-unit-id="`+unitId+`">−</span>
 					</td>
 					<td class="ical-link-column"><input class="w-100" type="text" name="NewUnitTypeIcalLink[`+unitId+`][]"/></td>
 				</tr>
 			`;
+            } else if (mergeType === "'.UNIT_MERGE_TYPE_MERGE_UNITS.'") {
+                html = `
+                <tr class="new-unit-type-row">
+                    <td>
+                        <select class="w-100 merged-unit-type-select" type="text" name="NewUnitTypeName[`+unitId+`][]">
+                    `;
+                $.map(unitsList, function( value ){
+                    var unit_id = value.unit_id !== null ? value.unit_id : "";
+                    var reminder_ical_link = value.reminder_ical_link !== null ? value.reminder_ical_link : "";
+                    var unit_name = value.unit_name !== null ? value.unit_name : "";
+                    var is_merge_unit = value.is_merge_unit !== null ? value.is_merge_unit : "0";
+                    
+                    if(is_merge_unit === "1") {
+                        html += `<option
+                            value="`+unit_id+`"
+                            data-ical-link="`+reminder_ical_link+`"
+                            disabled
+                            >` + unit_name + `</option>`;
+                    } else {
+                        html += `<option
+                            value="`+unit_id+`"
+                            data-ical-link="`+reminder_ical_link+`"
+                            >`+unit_name+`</option>`;
+                    }
+                });
+                var first_reminder_ical_link_index = unitsList.findIndex(element => element.is_merge_unit === "0");
+                var first_reminder_ical_link =
+                    unitsList[first_reminder_ical_link_index].reminder_ical_link !== null
+                    ? unitsList[first_reminder_ical_link_index].reminder_ical_link
+                    : "";
+                html += `
+                        </select>
+                    </td>
+                        <td></td>
+                        <td></td>
+                        <td align="center">
+                            <span class="icon remove-new-unit-type" data-unit-id="`+unitId+`">−</span>
+                        </td>
+                        <td class="ical-link-column">
+                            <input class="w-100" type="text" name="NewUnitTypeIcalLink[`+unitId+`][]" value="`+first_reminder_ical_link+`" readonly/>
+                        </td>
+                    </tr>
+                `;
+            }
             
             $(this).closest("tr").after(html);
+            $(`.select-merge-type[data-unit-id="`+unitId+`"]`).attr("disabled", true);
         });
         
         $(document).on("click", ".remove-new-unit-type", function () {
+            var unitId = $(this).data("unit-id");
+            
+            var counter = $(this).parents(".ical-table-unit").find("tr.new-unit-type-row").length
+            + $(this).parents(".ical-table-unit").find("tr.unit-type-row").length;
+            
+            console.log(counter);
+            
+            if(counter <= 1) {
+                $(`.select-merge-type[data-unit-id="`+unitId+`"]`).attr("disabled", false);
+            }
             
             $(this).closest("tr").remove();
         });
@@ -45,7 +129,10 @@ add_action('admin_footer', function () {
         $(document).on("click", ".remove-unit-type", function (event) {
             var unitTypeId   = $(this).val();
             var unitTypeName = $("input[name=\'UnitTypeName["+unitTypeId+"]\'").val();
-            var message   = "Are you sure to delete this Unit Type? (" + unitTypeName + ")\n" +
+            if(unitTypeName === undefined) {
+                unitTypeName = $(this).parents("tr.unit-type-row").find(":selected").text();
+            }
+            var message   = "Are you sure to delete this Unit Type? (" + $.trim(unitTypeName) + ")\n" +
              "This action is cannot be undone";
             
             if(!confirm(message)) {
@@ -53,18 +140,49 @@ add_action('admin_footer', function () {
             }
         });
         
-        $("#generate-csv-mode").parent().on("click", function() {
-            var selector = $(this).find("#generate-csv-mode")[0];
+        $(document).on("change", ".ajax-merge-type-update", function() {
+            var unitId = $(this).data("unit-id");
+            var mergeTypeValue = $(this).val();
+            
+            $(`.add-unit-type[data-unit-id="`+unitId+`"]`).addClass("d-none");
+            
+            $.ajax({
+                type: "POST",
+                url: "'. admin_url("admin-ajax.php") .'",
+                data: {
+                   action: "unit_merge_type_update",
+                   editUnitId: unitId,
+                   mergeTypeValue: mergeTypeValue
+                },
+                context: this,
+                success: function() {
+                var addUnitTypeSpan = $(`.add-unit-type[data-unit-id="`+unitId+`"]`);
+                    if( mergeTypeValue !== "'.UNIT_MERGE_TYPE_DEFAULT.'" ) {
+                        addUnitTypeSpan.removeClass("d-none");
+                    }
+                }
+            });
+        });
+        
+        $(document).on("change", ".merged-unit-type-select", function() {
+            var icalLink = $(this).find(":selected").data("ical-link");
+            
+            $(this).parents("tr.new-unit-type-row").find("input").val(icalLink);
+            $(this).parents("tr.unit-type-row").find("input").val(icalLink);
+        });
+        
+        $(".generate-csv-mode").parent().on("click", function() {
+            var selector = $(this).find(".generate-csv-mode")[0];
             var toggleStatus = $(selector).prop("checked") ? "off" : "on";
-            var editAccommodationId = $(selector).data("accommodation-id");
+            var editUnitId = $(selector).data("unit-id");
             
             $.ajax({
                 type: "POST",
                 dataType: "json",
                 url: "' . admin_url("admin-ajax.php") . '",
                 data: {
-                   action: "toggle_generate_csv_mode",
-                   editAccommodationId: editAccommodationId,
+                   action: "toggle_unit_generate_csv_mode",
+                   editUnitId: editUnitId,
                    mode: toggleStatus
                 },
                 context: this,
@@ -78,60 +196,29 @@ add_action('admin_footer', function () {
     ';
 });
 
-function getAccommodationDataById($accommodationId)
-	{
-		global $wpdb;
-		
-		$result = array();
-		
-		if($accommodationId !== '') {
-			
-			$table_name_suppliers      = $wpdb->prefix  . 'localliving_plg_suppliers';
-			$table_name_accommodations = $wpdb->prefix . 'localliving_plg_accommodations';
-			$table_name_units          = $wpdb->prefix . 'localliving_plg_units';
-			
-			$query = "SELECT *
-			FROM $table_name_accommodations
-			JOIN $table_name_suppliers ON $table_name_accommodations.accommodation_supplier_id = $table_name_suppliers.supplier_id
-			JOIN $table_name_units ON $table_name_accommodations.accommodation_id = $table_name_units.unit_accommodation_id
-			WHERE $table_name_accommodations.accommodation_id = $accommodationId";
-			
-			$returnedDataList = $wpdb->get_results($query);
-			
-			foreach ($returnedDataList as $returnedData) {
-				$result[] = array(
-					"accommodation_id"                => $returnedData->accommodation_id,
-					"accommodation_name"              => $returnedData->accommodation_name,
-                    "accommodation_csv_generate_mode" => $returnedData->accommodation_csv_generate_mode,
-					"supplier_name"                   => $returnedData->supplier_name,
-					"unit"               => array(
-						"unit_id"   => $returnedData->unit_id,
-						"unit_name" => $returnedData->unit_name
-					)
-				);
-			}
-		}
-		
-		return $result;
-	}
- 
-function getUnitTypesListByUnitId($unitId) {
- 
+function getUnitsListByAccommodationId($accommodationId, $returnJson = false)
+{
 	global $wpdb;
 	
-	$result = array();
+	$table_name_units                     = $wpdb->prefix . 'localliving_plg_units';
+    $table_name_units_ical_reminders      = $wpdb->prefix . 'localliving_plg_units_ical_reminders';
+	$table_name_unit_types_ical_reminders = $wpdb->prefix . 'localliving_plg_unit_types_ical_reminders';
 	
-	if($unitId !== '') {
-		$table_name_unit_types_ical_reminders = $wpdb->prefix  . 'localliving_plg_unit_types_ical_reminders';
-		
-		$query = "SELECT *
-		FROM $table_name_unit_types_ical_reminders
-		WHERE $table_name_unit_types_ical_reminders.unit_type_unit_id = $unitId";
-		
-		$result = $wpdb->get_results($query);
-    }
+	$query = "SELECT *, IF($table_name_unit_types_ical_reminders.unit_type_id IS NOT NULL, 1, 0) AS is_merge_unit
+        FROM $table_name_units
+        LEFT JOIN $table_name_units_ical_reminders
+            ON $table_name_units_ical_reminders.reminder_unit_id = $table_name_units.unit_id
+        LEFT JOIN $table_name_unit_types_ical_reminders
+            ON $table_name_units.unit_id = $table_name_unit_types_ical_reminders.unit_type_name
+        WHERE $table_name_units.unit_accommodation_id = $accommodationId";
     
-    return $result;
+    $queryResult = $wpdb->get_results($query);
+    
+    if($returnJson) {
+        return json_encode($queryResult);
+    }
+	
+	return $queryResult;
 }
 
 function getUnitTypeById($unitTypeId) {
@@ -171,46 +258,6 @@ function getUnitIcalStatusById($unitId) {
 	
 	return $result;
 }
- 
-function getUnitIcalLinkById($unitId) {
-    global $wpdb;
-	
-	$table_name_units_ical_reminders = $wpdb->prefix . 'localliving_plg_units_ical_reminders';
-    
-    $result = '';
- 
-    $query = "SELECT $table_name_units_ical_reminders.reminder_ical_link
-            FROM $table_name_units_ical_reminders
-            WHERE $table_name_units_ical_reminders.reminder_unit_id = $unitId";
-    
-    $obj = $wpdb->get_row($query);
-    
-    if(!is_null($obj)) {
-        $result = $obj->reminder_ical_link;
-    }
-    
-    return $result;
-}
-
-function getUnitUniqueRefById($unitId) {
-	global $wpdb;
-	
-	$table_name_units = $wpdb->prefix . 'localliving_plg_units';
-	
-	$result = '';
-	
-	$query = "SELECT $table_name_units.unit_unique_ref
-            FROM $table_name_units
-            WHERE $table_name_units.unit_id = $unitId";
-	
-	$obj = $wpdb->get_row($query);
-	
-	if(!is_null($obj)) {
-		$result = $obj->unit_unique_ref;
-	}
-    
-    return $result;
-}
 
 function checkIfUnitTypeNameIsExisted($unitTypeName, $unitId) {
 	global $wpdb;
@@ -235,344 +282,24 @@ function checkIfUnitTypeNameIsExisted($unitTypeName, $unitId) {
     return $result;
 }
 
-function getWeekNumber($startTime, $endTime) {
-	$weeks = array();
+function renderUnitMergeTypeOptions($selectedValue) {
+    $unitMergeTypeOptions = array(
+	    UNIT_MERGE_TYPE_DEFAULT     => "Default",
+        UNIT_MERGE_TYPE_UNIT_TYPES  => "Unit Types",
+        UNIT_MERGE_TYPE_MERGE_UNITS => "Flet"
+    );
 	
-	while ($startTime < $endTime) {
-		$day     = date('N', $startTime);
-        $weekNo  = date('W', $startTime);
-        
-        if($day == 6) {
-	        $weekNo += 1;
+	foreach ($unitMergeTypeOptions as $unitMergeTypeValue => $unitMergeTypeLabel) {
+        if($selectedValue == $unitMergeTypeValue) {
+	        echo '<option value="' . $unitMergeTypeValue . '" selected="selected">'
+		        . $unitMergeTypeLabel
+		        . '</option>';
+        } else {
+	        echo '<option value="' . $unitMergeTypeValue . '">'
+		        . $unitMergeTypeLabel
+		        . '</option>';
         }
-		$weeks[] = $weekNo;
-		$startTime += strtotime('+1 week', 0);
-        
-//        if($startTime > $endTime && $startTime < (strtotime('+1 week', $endTime))) {
-//	        $weeks[] = date('W', $endTime);
-//        }
-	}
-    
-    return $weeks;
-}
-
-function generateCsvByYear($year, $generateCsvMode = '0')
-{
-	$csvHeader = ['PROPERTY', 'NAME', 'SLEEPS', 'ZONE', 'TIPOLOGY', '', '', 'REF', 'Unique ref', '', '', '', '', ''];
-	
-	$firstDayOfYear = new DateTime();
-	$firstDayOfYear->setISODate($year, 1, WEEK_START_SATURDAY);
-    
-    $lastDayOfYear = new DateTime();
-	$lastDayOfYear->setISODate($year, 52, WEEK_END_SATURDAY);
-    
-	$firstDayOfYearTimestamp = $firstDayOfYear->getTimestamp();
-	$lastDayOfYearTimestamp  = $lastDayOfYear->getTimestamp();
-    $oneMoreWeek    = $firstDayOfYearTimestamp;
-    $weekNo         = 0 ;
-    
-    $tmpArr = array();
-	
-	while ($oneMoreWeek < $lastDayOfYearTimestamp) {
-		$weekNo++;
-        $weekNoTwoDigits = str_pad($weekNo, 2, '0', STR_PAD_LEFT);
-		$tmpArr[$weekNoTwoDigits]['start'] = date('d-m', $oneMoreWeek);
-		$oneMoreWeek = strtotime('+1 week', $oneMoreWeek);
-		$tmpArr[$weekNoTwoDigits]['end']   = date('d-m', $oneMoreWeek);
-	}
-    
-    foreach ($tmpArr as $weekNoTwoDigits => $tmp) {
-        $headerString = $weekNoTwoDigits.'-'.$year.' '.$tmp['start'].' '.$tmp['end'];
-	    $csvHeader[]  = $headerString;
     }
-	
-	try {
-		ob_clean();
-		
-		$accommodationData = array();
-		
-		if(isset($_POST['EditIcalLinkAccommodationId']) || $_SESSION['EditIcalLinkAccommodationId']) {
-			$editIcalLinkAccommodationId = $_POST['EditIcalLinkAccommodationId'] ?? '';
-			
-			if($editIcalLinkAccommodationId == '') {
-				$editIcalLinkAccommodationId = $_SESSION['EditIcalLinkAccommodationId'];
-			}
-			
-			if($editIcalLinkAccommodationId != '') {
-				$accommodationData = getAccommodationDataById($editIcalLinkAccommodationId);
-			}
-		}
-        
-        $fileName = $year.'_'.str_replace(' ','_',$accommodationData[0]['accommodation_name']).'.csv';
-  
-		$filePath = CSV_LOGS . $fileName;
-        
-        if(!is_file($filePath)) {
-	        touch($filePath);
-        }
-  
-		$csvWriter = Writer::createFromPath($filePath);
-		$csvWriter->setOutputBOM(Reader::BOM_UTF8);
-		$csvWriter->setDelimiter(';');
-		$csvWriter->insertOne($csvHeader);
-        
-        foreach ($accommodationData as $accommodation) {
-            $accommodationName = $accommodation['accommodation_name'];
-            $unitName          = $accommodation['unit']['unit_name'];
-            $unitId            = $accommodation['unit']['unit_id'];
-            
-            $dataRow = [
-                $accommodationName,
-                $unitName,
-                '',
-                '',
-                '',
-                '',
-                '',
-                '', //REF
-                getUnitUniqueRefById($unitId), //UNIQUE REF
-                '',
-                '',
-                '',
-                '',
-                ''
-            ];
-            
-            $icalLink      = getUnitIcalLinkById($unitId);
-	        $unitTypesList = getUnitTypesListByUnitId($unitId);
-            $bookedWeeks   = array();
-            $haveUnitType  = false;
-            
-            if($icalLink != '') {
-	            $obj = new ics();
-	            $icsEvents = $obj->getIcsEventsAsArray($icalLink);
-                
-                foreach ($icsEvents as $icsEvent) {
-                    
-                    if ((isset($icsEvent['DTSTART;VALUE=DATE']) && isset($icsEvent['DTEND;VALUE=DATE']))
-                    || (isset($icsEvent['DTSTART']) && isset($icsEvent['DTEND']))) {
-	                    $startDateString = $icsEvent['DTSTART;VALUE=DATE'] ?? $icsEvent['DTSTART'];
-	                    $endDateString   = $icsEvent['DTEND;VALUE=DATE'] ?? $icsEvent['DTEND'];
-	
-	                    $startDateString = substr($startDateString, 0, 8);
-	                    $endDateString   = substr($endDateString, 0, 8);
-                        
-                        if($startDateString != '' && $endDateString != '') {
-	                        $startDate = DateTime::createFromFormat('Ymd', trim($startDateString))->setTime(0,0);
-	                        $endDate   = DateTime::createFromFormat('Ymd', trim($endDateString))->setTime(0,0);;
-                            $startTime = $startDate->getTimestamp();
-                            $endTime   = $endDate->getTimestamp();
-                            
-                            $dateRangeWeekNo = getWeekNumber($startTime, $endTime);
-	                        $bookedWeeks     = array_merge($bookedWeeks,$dateRangeWeekNo);
-                        }
-                    }
-                }
-                
-	            $bookedWeeks = array_unique($bookedWeeks);
-	            asort($bookedWeeks);
-            } else {
-                if(count($unitTypesList) > 0) {
-	                $haveUnitType = true;
-                    foreach ($unitTypesList as $unitType) {
-                        $unitTypeIcalLink = $unitType->unit_type_ical_link;
-	                    $unitTypeId       = $unitType->unit_type_id;
-	
-	                    $obj = new ics();
-	                    $icsEvents = $obj->getIcsEventsAsArray($unitTypeIcalLink);
-	
-	                    $bookedWeeks[$unitTypeId] = array();
-	
-	                    foreach ($icsEvents as $icsEvent) {
-		
-		                    if ((isset($icsEvent['DTSTART;VALUE=DATE']) && isset($icsEvent['DTEND;VALUE=DATE']))
-			                    || (isset($icsEvent['DTSTART']) && isset($icsEvent['DTEND']))) {
-			                    $startDateString = $icsEvent['DTSTART;VALUE=DATE'] ?? $icsEvent['DTSTART'];
-			                    $endDateString   = $icsEvent['DTEND;VALUE=DATE'] ?? $icsEvent['DTEND'];
-			
-			                    $startDateString = substr($startDateString, 0, 8);
-			                    $endDateString   = substr($endDateString, 0, 8);
-			
-			                    if($startDateString != '' && $endDateString != '') {
-				                    $startDate = DateTime::createFromFormat('Ymd', trim($startDateString))->setTime(0,0);
-				                    $endDate   = DateTime::createFromFormat('Ymd', trim($endDateString))->setTime(0,0);;
-				                    $startTime = $startDate->getTimestamp();
-				                    $endTime   = $endDate->getTimestamp();
-				
-				                    $dateRangeWeekNo          = getWeekNumber($startTime, $endTime);
-				                    $bookedWeeks[$unitTypeId] = array_merge($bookedWeeks[$unitTypeId], $dateRangeWeekNo);
-			                    }
-		                    }
-	                    }
-	
-	                    $bookedWeeks[$unitTypeId] = array_unique($bookedWeeks[$unitTypeId]);
-	                    asort($bookedWeeks[$unitTypeId]);
-                    }
-                }
-            }
-            
-            for($i = 1; $i <= $weekNo; $i++) {
-                $thisWeekIsBooked = false;
-                
-                if(!$haveUnitType) {
-	                foreach ($bookedWeeks as $bookedWeek) {
-		                if((int) $bookedWeek == $i) {
-			                $thisWeekIsBooked = true;
-			                break;
-		                }
-                    }
-	
-	                if($thisWeekIsBooked) {
-		                $dataRow[] = 'b';
-	                } else {
-		                $dataRow[] = '';
-	                }
-                }
-                else {
-	                $allUnitTypeIsBookedByThisWeek    = false;
-                    $allUnitTypeIsAvailableByThisWeek = false;
-	
-	                foreach ($bookedWeeks as $unitTypeBookedWeeks) {
-		                $allUnitTypeIsBookedByThisWeek = in_array($i, $unitTypeBookedWeeks);
-                        if(!$allUnitTypeIsBookedByThisWeek) {
-                            break;
-                        }
-	                }
-	
-	                foreach ($bookedWeeks as $unitTypeBookedWeeks) {
-		                $allUnitTypeIsAvailableByThisWeek = !in_array($i, $unitTypeBookedWeeks);
-		                if(!$allUnitTypeIsAvailableByThisWeek) {
-			                break;
-		                }
-	                }
-                 
-	                if($generateCsvMode == '1') {
-		               if($allUnitTypeIsBookedByThisWeek) {
-			               $dataRow[] = 'b';
-                       } else {
-			               $dataRow[] = '';
-                       }
-	                } else {
-		                if($allUnitTypeIsAvailableByThisWeek) {
-			                $dataRow[] = '';
-                        } else {
-			                $dataRow[] = 'b';
-                        }
-	                }
-                }
-            }
-            
-	        $csvWriter->insertOne($dataRow);
-	
-	        //------ THIS IS FOR TESTING ISSUE------
-	        if(count($unitTypesList) > 0) {
-		        foreach ($unitTypesList as $unitType) {
-			        $unitTypeIcalLink = $unitType->unit_type_ical_link;
-			        //$unitTypeId       = $unitType->unit_type_id;
-			        $unitTypeName     = $unitType->unit_type_name;
-			
-			        $dataRow = [
-				        $unitName,
-				        $unitTypeName,
-				        '',
-				        '',
-				        '',
-				        '',
-				        '',
-				        '', //REF
-				        '', //UNIQUE REF
-				        '',
-				        '',
-				        '',
-				        '',
-				        ''
-			        ];
-			
-			        $bookedWeeks = array();
-			
-			        if($unitTypeIcalLink != '') {
-				        /* Getting events from isc file */
-				        $obj = new ics();
-				        $unitTypeIcsEvents = $obj->getIcsEventsAsArray( $unitTypeIcalLink );
-				
-				        foreach ($unitTypeIcsEvents as $unitTypeIcsEvent) {
-					
-					        if (isset($unitTypeIcsEvent['DTSTART;VALUE=DATE']) && isset($unitTypeIcsEvent['DTEND;VALUE=DATE'])) {
-						        $startDateString = $unitTypeIcsEvent['DTSTART;VALUE=DATE'];
-						        $endDateString   = $unitTypeIcsEvent['DTEND;VALUE=DATE'];
-						
-						        if($startDateString != '' && $endDateString != '') {
-							        $startDate = DateTime::createFromFormat('Ymd', trim($startDateString))->setTime(0,0);
-							        $endDate   = DateTime::createFromFormat('Ymd', trim($endDateString))->setTime(0,0);;
-							        $startTime = $startDate->getTimestamp();
-							        $endTime   = $endDate->getTimestamp();
-							
-							        $dateRangeWeekNo = getWeekNumber($startTime, $endTime);
-							        $bookedWeeks     = array_merge($bookedWeeks,$dateRangeWeekNo);
-						        }
-					        }
-				        }
-				
-				        $bookedWeeks = array_unique($bookedWeeks);
-				        asort($bookedWeeks);
-			        }
-			
-			        for($i = 1; $i <= $weekNo; $i++) {
-				        $thisWeekIsBooked = false;
-				
-				        foreach ($bookedWeeks as $bookedWeek) {
-					        if((int) $bookedWeek == $i) {
-						        $thisWeekIsBooked = true;
-						        break;
-					        }
-				        }
-				
-				        if($thisWeekIsBooked) {
-					        $dataRow[] = 'b';
-				        } else {
-					        $dataRow[] = '';
-				        }
-			        }
-			
-			        $csvWriter->insertOne($dataRow);
-		        }
-	        }
-	        //------ THIS IS FOR TESTING ISSUE------
-        }
-        
-        //remove enclosure
-        $csvContent = $csvWriter->__toString();
-		$csvContent = str_replace('"', '', $csvContent);
-		
-		if(is_file($filePath)) {
-            file_put_contents($filePath, $csvContent);
-			header('Content-Type: text/csv; charset=UTF-8');
-			header('Content-Description: File Transfer');
-			header('Content-Disposition: attachment; filename="'.$fileName.'"');
-            readfile($filePath);
-		}
-  
-		exit;
-	} catch (\Exception $e) {
-        echo "<pre>";
-        print_r($e);
-        echo "</pre>";
-        exit;
-    }
-}
-	
-$accommodationData           = array();
-$editIcalLinkAccommodationId = '';
-
-if(isset($_POST['EditIcalLinkAccommodationId']) || $_SESSION['EditIcalLinkAccommodationId']) {
-    $editIcalLinkAccommodationId = $_POST['EditIcalLinkAccommodationId'] ?? '';
-    
-    if($editIcalLinkAccommodationId == '') {
-	    $editIcalLinkAccommodationId = $_SESSION['EditIcalLinkAccommodationId'];
-    }
-    
-    $_SESSION['EditIcalLinkAccommodationId'] = $editIcalLinkAccommodationId;
-    $accommodationData = getAccommodationDataById($editIcalLinkAccommodationId);
 }
 
 if(isset($_POST['SaveEditIcalLink'])) {
@@ -596,6 +323,8 @@ if(isset($_POST['SaveEditIcalLink'])) {
                     continue;
                 }
                 
+                $icalLink = trim($icalLink);
+
                 $query = "SELECT $table_name_units_ical_reminders.reminder_unit_id
                         FROM $table_name_units_ical_reminders
                         WHERE $table_name_units_ical_reminders.reminder_unit_id = $unitId";
@@ -613,7 +342,7 @@ if(isset($_POST['SaveEditIcalLink'])) {
                     
                     $wpdb->insert($table_name_units_ical_reminders, $data);
                 } else {
-                    $oldIcalLink = getUnitIcalLinkById($unitId);
+                    $oldIcalLink = Rediger_FerieboligHelper::getUnitIcalLinkById($unitId);
                     
                     if($oldIcalLink !== $icalLink) {
 	                    $data = array(
@@ -627,156 +356,192 @@ if(isset($_POST['SaveEditIcalLink'])) {
 	                    );
 	
 	                    $wpdb->update($table_name_units_ical_reminders, $data, $where);
-                    }
-                }
-            }
-        }
-        
-        if(isset($_POST['NewUnitTypeName']) && isset($_POST['NewUnitTypeIcalLink'])) {
-            $newUnitTypeNameOfUnit = $_POST['NewUnitTypeName'];
-            $newUnitTypeIcalLinkOfUnit = $_POST['NewUnitTypeIcalLink'];
-	
-	        global $wpdb;
-	
-	        $table_name_unit_types_ical_reminders = $wpdb->prefix . 'localliving_plg_unit_types_ical_reminders';
-            
-            foreach ($newUnitTypeNameOfUnit as $unitId => $newUnitTypeNamesList) {
-	            foreach ($newUnitTypeNamesList as $index => $newUnitTypeName) {
-                    $unitTypeNameExisted = checkIfUnitTypeNameIsExisted($newUnitTypeName, $unitId);
-		
-		            //prevent re-insert when reload
-                    if(!$unitTypeNameExisted) {
-	                    $data = array(
-		                    'unit_type_unit_id'   => $unitId,
-		                    'unit_type_name'      => $newUnitTypeName,
-		                    'unit_type_ical_link' => $newUnitTypeIcalLinkOfUnit[$unitId][$index]
-	                    );
-	
-	                    $wpdb->insert($table_name_unit_types_ical_reminders, $data);
-	
-	                    $query = "SELECT $table_name_units_ical_reminders.reminder_unit_id
-                        FROM $table_name_units_ical_reminders
-                        WHERE $table_name_units_ical_reminders.reminder_unit_id = $unitId";
-	
-	                    $unitIcalIsExisted = !is_null($wpdb->get_var($query));
                         
-                        if($unitIcalIsExisted) {
-	                        $data = array(
-		                        "reminder_ical_link"         => '',
-		                        "reminder_status"            => "green",
-		                        "reminder_updated_timestamp" => time()
-	                        );
-	
-	                        $where = array(
-		                        "reminder_unit_id" => $unitId
-	                        );
-	
-	                        $wpdb->update($table_name_units_ical_reminders, $data, $where);
-                        } else {
-	                        $data = array(
-		                        "reminder_unit_id"           => $unitId,
-		                        "reminder_ical_link"         => '',
-		                        "reminder_status"            => "green",
-		                        "reminder_created_timestamp" => time(),
-		                        "reminder_updated_timestamp" => time(),
-	                        );
-	
-	                        $wpdb->insert($table_name_units_ical_reminders, $data);
-                        }
-                    }
-                }
-            }
-        }
-        
-        if(isset($_POST['UnitTypeName']) && isset($_POST['UnitTypeIcalLink'])) {
-            $updateUnitTypeNameArr     = $_POST['UnitTypeName'];
-            $updateUnitTypeIcalLinkArr = $_POST['UnitTypeIcalLink'];
-            
-            foreach ($updateUnitTypeNameArr as $updateUnitTypeId => $updateUnitTypeName) {
-                $thisUnitTypeObj = getUnitTypeById($updateUnitTypeId);
-                
-                if($thisUnitTypeObj !== false) {
-                    $thisUnitTypeName   = $thisUnitTypeObj->unit_type_name;
-                    $thisUnitTypeUnitId = $thisUnitTypeObj->unit_type_unit_id;
-                    $unitTypeNameExisted = checkIfUnitTypeNameIsExisted($updateUnitTypeName, $thisUnitTypeUnitId);
-                    
-                    if(($updateUnitTypeName !== $thisUnitTypeName) && !$unitTypeNameExisted) {
-                        $data = array(
-                            'unit_type_name' => $updateUnitTypeName
+                        //update as unit type when this unit is merged unit
+	                    $data = array(
+                            "unit_type_ical_link" => $icalLink
                         );
                         
                         $where = array(
-                            'unit_type_id' => $updateUnitTypeId
+                            "unit_type_name" => $unitId
                         );
                         
                         $wpdb->update($table_name_unit_types_ical_reminders, $data, $where);
-	
-	                    $query = "SELECT $table_name_units_ical_reminders.reminder_unit_id
-                        FROM $table_name_units_ical_reminders
-                        WHERE $table_name_units_ical_reminders.reminder_unit_id = $thisUnitTypeUnitId";
-	
-	                    $isExist = !is_null($wpdb->get_var($query));
-	
-	                    if(!$isExist) {
-		                    $data = array(
-			                    "reminder_unit_id" => $thisUnitTypeUnitId,
-			                    "reminder_ical_link" => "",
-			                    "reminder_status" => "green",
-			                    "reminder_created_timestamp" => time(),
-			                    "reminder_updated_timestamp" => time(),
-		                    );
-		
-		                    $wpdb->insert($table_name_units_ical_reminders, $data);
-	                    } else {
-		                    $data = array(
-			                    "reminder_ical_link"         => "",
-			                    "reminder_status"            => "green",
-			                    "reminder_updated_timestamp" => time()
-		                    );
-		
-		                    $where = array(
-			                    "reminder_unit_id" => $thisUnitTypeUnitId
-		                    );
-		
-		                    $wpdb->update($table_name_units_ical_reminders, $data, $where);
-                        }
-                    }
-                }
-            }
-            
-            foreach ($updateUnitTypeIcalLinkArr as $updateUnitTypeId => $updateUnitTypeIcalLink) {
-	            $thisUnitTypeObj = getUnitTypeById($updateUnitTypeId);
-
-	            if($thisUnitTypeObj !== false) {
-		            $thisUnitTypeIcalLink  = $thisUnitTypeObj->unit_type_ical_link;
-		            $thisUnitTypeUnitId    = $thisUnitTypeObj->unit_type_unit_id;
-
-		            if($updateUnitTypeIcalLink !== $thisUnitTypeIcalLink) {
-			            $data = array(
-				            'unit_type_ical_link' => $updateUnitTypeIcalLink
-			            );
-
-			            $where = array(
-				            'unit_type_id' => $updateUnitTypeId
-			            );
-
-			            $wpdb->update($table_name_unit_types_ical_reminders, $data, $where);
-
-			            $data = array(
-				            "reminder_ical_link"         => "",
-				            "reminder_status"            => "green",
-				            "reminder_updated_timestamp" => time()
-			            );
-
-			            $where = array(
-				            "reminder_unit_id" => $thisUnitTypeUnitId
-			            );
-
-			            $wpdb->update($table_name_units_ical_reminders, $data, $where);
                     }
                 }
             }
         }
+	
+	    if(isset($_POST['NewUnitTypeName']) && isset($_POST['NewUnitTypeIcalLink'])) {
+		    $newUnitTypeNameOfUnit     = $_POST['NewUnitTypeName'];
+		    $newUnitTypeIcalLinkOfUnit = $_POST['NewUnitTypeIcalLink'];
+		
+		    global $wpdb;
+		
+		    $table_name_unit_types_ical_reminders = $wpdb->prefix . 'localliving_plg_unit_types_ical_reminders';
+		
+		    foreach ($newUnitTypeNameOfUnit as $unitId => $newUnitTypeNamesList) {
+			    foreach ($newUnitTypeNamesList as $index => $newUnitTypeName) {
+				    $unitTypeNameExisted = checkIfUnitTypeNameIsExisted($newUnitTypeName, $unitId);
+				
+				    //prevent re-insert when reload
+				    if(!$unitTypeNameExisted) {
+					    $data = array(
+						    'unit_type_unit_id'   => $unitId,
+						    'unit_type_name'      => $newUnitTypeName,
+						    'unit_type_ical_link' => $newUnitTypeIcalLinkOfUnit[$unitId][$index]
+					    );
+					
+					    $wpdb->insert($table_name_unit_types_ical_reminders, $data);
+					
+					    $query = "SELECT $table_name_units_ical_reminders.reminder_unit_id
+                        FROM $table_name_units_ical_reminders
+                        WHERE $table_name_units_ical_reminders.reminder_unit_id = $unitId";
+					
+					    $unitIcalIsExisted = !is_null($wpdb->get_var($query));
+					
+					    if($unitIcalIsExisted)
+					    {
+						    $data = array(
+							    "reminder_ical_link"         => '',
+							    "reminder_status"            => "green",
+							    "reminder_updated_timestamp" => time()
+						    );
+						
+						    $where = array(
+							    "reminder_unit_id" => $unitId
+						    );
+						
+						    $wpdb->update($table_name_units_ical_reminders, $data, $where);
+					    } else
+					    {
+						    $data = array(
+							    "reminder_unit_id"           => $unitId,
+							    "reminder_ical_link"         => '',
+							    "reminder_status"            => "green",
+							    "reminder_created_timestamp" => time(),
+							    "reminder_updated_timestamp" => time(),
+						    );
+						
+						    $wpdb->insert($table_name_units_ical_reminders, $data);
+					    }
+					
+					    $unitTypeIsMergedUnit  = !is_null(Rediger_FerieboligHelper::getUnitInfoById($newUnitTypeName));
+					
+					    if($unitTypeIsMergedUnit) {
+						    $data = array(
+							    'unit_type_ical_link' => Rediger_FerieboligHelper::getUnitIcalLinkById($newUnitTypeName)
+						    );
+						
+						    $where = array(
+							    "unit_type_name" => $newUnitTypeName
+						    );
+						
+						    $wpdb->update($table_name_unit_types_ical_reminders, $data, $where);
+					    }
+				    }
+			    }
+		    }
+	    }
+	
+	    if(isset($_POST['UnitTypeName']) && isset($_POST['UnitTypeIcalLink'])) {
+		    $updateUnitTypeNameArr     = $_POST['UnitTypeName'];
+		    $updateUnitTypeIcalLinkArr = $_POST['UnitTypeIcalLink'];
+		
+		    foreach ($updateUnitTypeNameArr as $updateUnitTypeId => $updateUnitTypeName) {
+			    $thisUnitTypeObj = getUnitTypeById($updateUnitTypeId);
+			
+			    if($thisUnitTypeObj !== false) {
+				    $thisUnitTypeName   = $thisUnitTypeObj->unit_type_name;
+				    $thisUnitTypeUnitId = $thisUnitTypeObj->unit_type_unit_id;
+				    $unitTypeNameExisted = checkIfUnitTypeNameIsExisted($updateUnitTypeName, $thisUnitTypeUnitId);
+				
+				    if(($updateUnitTypeName !== $thisUnitTypeName) && !$unitTypeNameExisted) {
+					    $data = array(
+						    'unit_type_name' => $updateUnitTypeName
+					    );
+					
+					    $where = array(
+						    'unit_type_id' => $updateUnitTypeId
+					    );
+					
+					    $wpdb->update($table_name_unit_types_ical_reminders, $data, $where);
+					
+					    $query = "SELECT $table_name_units_ical_reminders.reminder_unit_id
+                        FROM $table_name_units_ical_reminders
+                        WHERE $table_name_units_ical_reminders.reminder_unit_id = $thisUnitTypeUnitId";
+					
+					    $isExist = !is_null($wpdb->get_var($query));
+					
+					    if(!$isExist) {
+						    $data = array(
+							    "reminder_unit_id" => $thisUnitTypeUnitId,
+							    "reminder_ical_link" => "",
+							    "reminder_status" => "green",
+							    "reminder_created_timestamp" => time(),
+							    "reminder_updated_timestamp" => time(),
+						    );
+						
+						    $wpdb->insert($table_name_units_ical_reminders, $data);
+					    } else {
+						    $data = array(
+							    "reminder_ical_link"         => "",
+							    "reminder_status"            => "green",
+							    "reminder_updated_timestamp" => time()
+						    );
+						
+						    $where = array(
+							    "reminder_unit_id" => $thisUnitTypeUnitId
+						    );
+						
+						    $wpdb->update($table_name_units_ical_reminders, $data, $where);
+					    }
+				    }
+			    }
+		    }
+		
+		    foreach ($updateUnitTypeIcalLinkArr as $updateUnitTypeId => $updateUnitTypeIcalLink) {
+			    $thisUnitTypeObj = getUnitTypeById($updateUnitTypeId);
+			
+			    if($thisUnitTypeObj !== false) {
+				    $thisUnitTypeIcalLink  = $thisUnitTypeObj->unit_type_ical_link;
+				    $thisUnitTypeUnitId    = $thisUnitTypeObj->unit_type_unit_id;
+				    $thisUnitTypeName      = $thisUnitTypeObj->unit_type_name;
+				
+				    $unitTypeIsMergedUnit  = !is_null(Rediger_FerieboligHelper::getUnitInfoById($thisUnitTypeName));
+				
+				    if($updateUnitTypeIcalLink !== $thisUnitTypeIcalLink) {
+					    if(!$unitTypeIsMergedUnit) {
+						    $data = array(
+							    'unit_type_ical_link' => $updateUnitTypeIcalLink
+						    );
+					    } else {
+						    $data = array(
+							    'unit_type_ical_link' => Rediger_FerieboligHelper::getUnitIcalLinkById($thisUnitTypeName)
+						    );
+					    }
+					
+					    $where = array(
+						    'unit_type_id' => $updateUnitTypeId
+					    );
+					
+					    $wpdb->update($table_name_unit_types_ical_reminders, $data, $where);
+					
+					    $data = array(
+						    "reminder_ical_link"         => "",
+						    "reminder_status"            => "green",
+						    "reminder_updated_timestamp" => time()
+					    );
+					
+					    $where = array(
+						    "reminder_unit_id" => $thisUnitTypeUnitId
+					    );
+					
+					    $wpdb->update($table_name_units_ical_reminders, $data, $where);
+				    }
+			    }
+		    }
+	    }
         
         if(isset($_POST['UnitUniqueRef'])) {
             $unitUniqueRefsList = $_POST['UnitUniqueRef'];
@@ -813,13 +578,11 @@ if(isset($_POST['RemoveUnitType'])) {
     }
 }
 
-if(isset($_POST['GenerateCsvByYear'])) {
-    $yearGenerateCsv = $_POST['GenerateCsvByYear'];
-    $generateCsvMode = $accommodationData[0]['accommodation_csv_generate_mode'];
-    
-    if($yearGenerateCsv != '') {
-        generateCsvByYear($yearGenerateCsv, $generateCsvMode);
-    }
+$generateCsvByYearAction = $_POST['GenerateCsvByYear'] ?? '';
+$yearGenerateCsv         = $_POST['YearGenerate']      ?? date("Y");
+
+if($generateCsvByYearAction == 'GenerateCsvByYear') {
+    Rediger_FerieboligHelper::generateCsvByYear($yearGenerateCsv, $editIcalLinkAccommodationId);
 }
 ?>
 <div class="loading-first-wrapper">
@@ -846,8 +609,12 @@ if(isset($_POST['GenerateCsvByYear'])) {
 	                if (isset($_SESSION['localliving_cart'])) {
 		                $cart = $_SESSION['localliving_cart'];
 		
-		                foreach ($cart as $selectedAccommodation) {
-			                $total += count($selectedAccommodation);
+		                foreach ($cart as $selectedAccommodations) {
+			                foreach ($selectedAccommodations as $key => $selectedAccommodation) {
+				                if(is_numeric($key)) {
+					                $total += 1;
+				                }
+			                }
 		                }
 	                }
 	
@@ -883,72 +650,86 @@ if(isset($_POST['GenerateCsvByYear'])) {
 				<div class="download-csv">
 					<div class="w-100 edit-ical-label">Download CSV file</div>
 					<div class="d-flex">
-                        <?php
-                            $thisYear = date('Y');
-                            for ( $i=0 ; $i<=2 ; $i++ ) {
-                                echo '<button class="btn btn-light" name="GenerateCsvByYear" value="'.((int) $thisYear + $i).'">';
-                                echo (int) $thisYear + $i;
-                                echo '</button>';
-                            }
-                        ?>
+                        <input type="text" id="generate-csv-year-input" name="YearGenerate" value="<?php echo date("Y"); ?>"/>
+                        <button type="submit" name="GenerateCsvByYear" value="GenerateCsvByYear">Download CSV</button>
 					</div>
-				</div>
-				<div class="set-available">
-					<div class="w-100 edit-ical-label">Set available if 1 unit apartment is free</div>
-					<div class="d-flex">
-                        <label>
-                            <input id="generate-csv-mode"
-                                   data-accommodation-id="<?php echo $editIcalLinkAccommodationId; ?>"
-                                   name="SetAvailableMode"
-                                   <?php
-                                       if($accommodationData[0]['accommodation_csv_generate_mode'] == '1') {
-                                           echo 'checked="checked"';
-                                       }
-                                   ?>
-                                   class="toggle-input" type="checkbox">
-                        </label>
-                    </div>
 				</div>
 			</div>
 			
 			<div class="ical-wrapper">
 				<table class="ical-table" width="100%">
 					<tr>
-						<th width="20%">Unit</th>
-						<th width="60%">iCal link</th>
+                        <th width="20%">Unit</th>
+                        <th width="5%"></th>
+                        <th width="10%"></th>
+                        <th width="5%"></th>
+						<th width="40%" class="ical-link-column">iCal link</th>
                         <th width="20%">Unique ref</th>
 					</tr>
 					<tr>
-						<td colspan="3">
+						<td colspan="7">
 							<table class="ical-table-inside table" border="1" width="100%">
 								<?php foreach ($accommodationData as $data) : ?>
 									<?php
 										$unitId         = $data["unit"]["unit_id"];
-										$icalLink       = getUnitIcalLinkById($unitId) ?? '';
-                                        $unitUniqueRef  = getUnitUniqueRefById($unitId) ?? '';
-                                        $unitIcalStatus = getUnitIcalStatusById($unitId);
-										$unitTypesList  = getUnitTypesListByUnitId($unitId);
-                                        
+										$icalLink       = Rediger_FerieboligHelper::getUnitIcalLinkById($unitId) ?? '';
+									    $unitTypesList  = Rediger_FerieboligHelper::getUnitTypesListByUnitId($unitId);
+                                        $isTerretrusche = $data['supplier_name'] === 'Terretrusche';
+									
+									    $unitIcalStatus = getUnitIcalStatusById($unitId);
                                         if($unitIcalStatus == '') {
 	                                        $unitIcalStatus = 'grey';
                                         }
+									
+									    $unitInfo            = Rediger_FerieboligHelper::getUnitInfoById($unitId);
+									    $unitUniqueRef       = $unitInfo->unit_unique_ref        ?? '';
+                                        $unitMergeType       = $unitInfo->unit_merge_type        ?? UNIT_MERGE_TYPE_UNIT_TYPES;
+                                        $unitGenerateCsvMode = $unitInfo->unit_generate_csv_mode ?? 0;
 									?>
-									<tr>
+									<tr class="accommodation-unit-row">
 										<td class="ical-table-unit">
 											<table width="100%">
 												<tr>
-													<th width="17%" class="text-uppercase fw-normal" valign="middle">
+													<th width="15%" class="text-uppercase fw-normal" valign="middle">
                                                         <div class="d-flex align-items-center">
 															<div class="accommodation-ical-status-<?php echo $unitIcalStatus; ?> m-0 me-2"></div>
 															<?php echo $data["unit"]["unit_name"] ?>
 														</div>
                                                     </th>
-													<th width="2%" align="center">
-														<span class="icon add-unit-type" data-unit-id="<?php echo $unitId; ?>">+</span>
-													</th>
-													<th width="61%" class="ical-link-column">
+                                                    <th width="5%">
+                                                        <div class="set-available">
+                                                            <div class="toggle-wrapper d-flex">
+                                                                <label>
+                                                                    <input name="SetAvailableMode"
+                                                                           class="toggle-input generate-csv-mode"
+                                                                           type="checkbox"
+                                                                           data-unit-id="<?php echo $unitId; ?>"
+                                                                           <?php echo $unitGenerateCsvMode == '1' ? 'checked="checked"' : '' ?>
+                                                                    >
+                                                                    <span class="toggle-tooltip">Set available if 1 unit type is free</span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </th>
+                                                    <th width="10%">
+                                                        <select class="ajax-merge-type-update select-merge-type w-100"
+                                                                data-unit-id="<?php echo $unitId; ?>"
+                                                                <?php echo count($unitTypesList) > 0 ? "disabled" : "" ?>
+                                                                <?php echo $isTerretrusche ? "disabled" : "" ?>
+                                                        >
+                                                            <?php renderUnitMergeTypeOptions($unitMergeType); ?>
+                                                        </select>
+                                                    </th>
+                                                    <th width="5%" align="center">
+                                                        <?php if($unitMergeType == UNIT_MERGE_TYPE_DEFAULT) : ?>
+                                                            <span class="icon add-unit-type d-none" data-unit-id="<?php echo $unitId; ?>">+</span>
+                                                        <?php else : ?>
+                                                            <span class="icon add-unit-type" data-unit-id="<?php echo $unitId; ?>">+</span>
+                                                        <?php endif; ?>
+                                                    </th>
+													<th width="40%" class="ical-link-column">
                                                         <?php if(count($unitTypesList) <= 0) :?>
-														<input class="w-100" type="text" name="IcalLink[<?php echo $unitId; ?>]" value="<?php echo $icalLink; ?>"/>
+														<input class="w-100" type="text" name="IcalLink[<?php echo $unitId; ?>]" value="<?php echo $icalLink; ?>" <?php echo $isTerretrusche ? 'disabled' : ''; ?>/>
                                                         <?php endif; ?>
                                                     </th>
                                                     <th width="20%">
@@ -956,16 +737,19 @@ if(isset($_POST['GenerateCsvByYear'])) {
                                                     </th>
 												</tr>
 												<?php if(count($unitTypesList) > 0): ?>
-													<?php foreach ($unitTypesList as $unitType): ?>
-														<?php 
+													    <?php foreach ($unitTypesList as $unitType): ?>
+														<?php
 															$unitTypeIcalLink = $unitType->unit_type_ical_link;
 															$unitTypeId       = $unitType->unit_type_id;
 															$unitTypeName     = $unitType->unit_type_name;
 														?>
-														<tr>
+												        <?php if($unitMergeType == UNIT_MERGE_TYPE_UNIT_TYPES) : ?>
+														<tr class="unit-type-row">
 															<td>
 																<input class="w-100" type="text" name="UnitTypeName[<?php echo $unitTypeId ?>]" value="<?php echo $unitTypeName ?>"/>
                                                             </td>
+                                                            <td></td>
+                                                            <td></td>
                                                             <td align="center">
                                                                 <button type="submit" name="RemoveUnitType" value="<?php echo $unitTypeId ?>" class="remove-unit-type icon">−</button>
                                                             </td>
@@ -973,6 +757,40 @@ if(isset($_POST['GenerateCsvByYear'])) {
                                                             	<input class="w-100" type="text" name="UnitTypeIcalLink[<?php echo $unitTypeId ?>]" value="<?php echo $unitTypeIcalLink ?>"/>
                                                             </td>
 														</tr>
+														<?php elseif ($unitMergeType == UNIT_MERGE_TYPE_MERGE_UNITS) : ?>
+                                                            <tr class="unit-type-row">
+                                                                <td>
+                                                                    <select class="w-100 merged-unit-type-select" name="UnitTypeName[<?php echo $unitTypeId ?>]">
+	                                                                    <?php
+		                                                                    $unitsList = getUnitsListByAccommodationId($editIcalLinkAccommodationId);
+                                                                            foreach ($unitsList as $unit) :
+                                                                            $selected    = $unitTypeName == $unit->unit_id;
+                                                                            $isMergeUnit = $unit->is_merge_unit == 1;
+                                                                            if($selected) {
+	                                                                            $unitTypeIcalLink
+                                                                                    = !is_null($unit->reminder_ical_link) ? $unit->reminder_ical_link : '';
+                                                                            }
+	                                                                    ?>
+                                                                            <option value="<?php echo $unit->unit_id; ?>"
+                                                                                data-ical-link="<?php echo $unit->reminder_ical_link; ?>"
+                                                                                <?php echo $selected ? 'selected' : '' ?>
+	                                                                            <?php echo $isMergeUnit ? 'disabled' : '' ?>
+                                                                            >
+                                                                                <?php echo $unit->unit_name; ?>
+                                                                            </option>
+                                                                        <?php endforeach; ?>
+                                                                    </select>
+                                                                </td>
+                                                                <td></td>
+                                                                <td></td>
+                                                                <td align="center">
+                                                                    <button type="submit" name="RemoveUnitType" value="<?php echo $unitTypeId ?>" class="remove-unit-type icon">−</button>
+                                                                </td>
+                                                                <td class="ical-link-column">
+                                                                    <input class="w-100" type="text" name="UnitTypeIcalLink[<?php echo $unitTypeId ?>]" value="<?php echo $unitTypeIcalLink ?>" readonly/>
+                                                                </td>
+                                                            </tr>
+														<?php endif; ?>
 													<?php endforeach; ?>
 												<?php endif; ?>
 											</table>

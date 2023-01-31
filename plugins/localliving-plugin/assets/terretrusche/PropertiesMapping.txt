@@ -1,0 +1,117 @@
+old_id,name,new_id
+45,Villa dei Mandorli Panicale Perugia,
+103,Casale  I Pagliai Cortona,
+114,Villa Eugenio Cortona,1325
+121,Agriturismo Col di leccio - Il Ciliegio Cortona,
+122,Agriturismo Col di leccio - La Quercia Cortona,
+123,Agriturismo Col di leccio - Saltafossi Cortona,
+156,Villa I Pagliai Cortona,
+182,Villa L'Antico Pino Cortona,
+184,Agriturismo I Pagliai - I Pagliai Sopra Cortona,2814
+185,Agriturismo I Pagliai - I Pagliai Sotto Cortona,
+186,Agriturismo I Pagliai - Casa Tobia Sopra Cortona,
+187,Agriturismo I Pagliai - Casa Tobia Sotto Cortona,
+189,Agriturismo I Pagliai - Casa Tobia Cortona,
+208,Casa Melody Cortona,
+219,Casale Fontocchio Cortona,
+226,Villa Chiara Cappuccini - Cortona,3887
+248,Villa Toscana Chianti,
+249,Villa Toscana 2 Chianti,
+260,Villa La Foce Castiglion Fiorentino,
+273,Il Casone Cortona,1316
+274,La Villa sul Lago Lago Trasimeno,
+306,Villa Alma Cortona,
+309,Cottage I Frati Cortona,
+325,Villa Valentina Cetona Siena,
+353,Col di Leccio - Il Lauro Cortona,
+354,Agriturismo Col di Leccio Cortona,
+395,Villa Leccio Cortona,2870
+400,Villa Fontocchio Cortona,923
+405,Villa Claudia Cortona - Foiano,1911
+416,Villa Borgonuovo Cortona,949
+455,Villa Arianna Passignano sul Trasimeno,
+469,Villa del Rio Cortona,
+477,Villa Luna Tuoro sul Trasimeno,
+503,Villa Gosparini Lago Trasimeno - Cortona,
+519,Villa Cristina Cortona,3536
+552,Col di Leccio - Acero Cortona,
+553,Villa Il Seccatoio Cortona,3379
+607,Lo Staioro Deluxe Cortona,
+612,Villa Valerie Cortona,1512
+622,Villa Vallibona Castiglion Fiorentino - Cortona,1322
+629,Villa dei Salici sul Lago Lago Trasimeno,
+643,Lo Staioro Luxury Cortona,
+644,Villa I Cerri Lago Trasimeno,3704
+645,Villa Savino Perugia - Lago Trasimeno,
+646,Villa Torre Perugia - Lago Trasimeno,
+647,Casina La Graziosa Cortona,1716
+649,Villa del Colle Castiglion Fiorentino,1328
+660,Villa Panphilii Cortona,
+677,Villa Topazio Cortona,
+679,Casina Rolli Cortona,
+699,Bellavista Perugia - Lago Trasimeno,
+704,Villa Rosa Cortona,
+705,Villa Eleonoire Perugia,
+734,Villa La Pergola Cortona,
+738,Lo Staioro Charme Cortona,
+758,La Casina di Pietra Cortona,
+761,Casale di Campagna Cortona,
+828,Vecchio Casale Cortona,
+845,Villa del Cardinale Cortona,
+850,Casetta San Martino Cortona,
+861,Appartamento Duomo Cortona,
+887,Villa Gaggioleto Castiglion Fiorentino,2670
+893,Villa Teresa Cortona,3533
+904,Podere Gli Orci Cortona,
+907,Appartamento San Lazzo 2 Castiglion Fiorentino,
+925,Casale San Martino agli Ulivi Cortona,3687
+928,Villa Paola Cortona,
+937,Casa la Pinetina Cortona,
+947,Villa Il Nido Cortona,3200
+960,Villa Eugenio Monaldi Cortona,
+967,Villa Cobalto Bibbona,
+973,Il Palazzo Dicomano Firenze,
+975,Podere Le Botti Cortona,
+979,Casale Il Giardino di Silvana Cortona,
+981,Le Dimore di Mimmina Oleandri 4 Cortona,
+988,Le Dimore di Mimmina Villa Il Roseto Cortona - Arezzo,
+989,Villa Proveda Passignano,
+998,Villa Elisa Cortona,
+1008,Agriturismo Il Giardino di Diana Cortona,
+1012,Casa La Dolce Vita Cortona,
+1014,Agriturismo Villa Il Giardino di Diana Cortona,3527
+1015,Villa La Rugantina Cortona,
+1036,Casa Dolly Cortona,
+1037,Casale La Rugantina Cortona,
+1040,BellaVista di Mammi Castiglion Fiorentino,3882
+1042,Villa Primavera Passignano sul Trasimeno,
+1047,Villa Bianca Cortona,
+1049,Villa Poggio Farneta Cortona,
+1050,Casale La Sorgente Cortona,
+1051,Villa Dante Assisi,
+1080,Villa Marghi Lago Trasimeno,
+1081,Villa Beatrice Pian di Sc�,
+1073,Villa Ancano Lucignano,4382
+1062,La Noce San Pietro a Cegliolo,
+1078,Villa di Colcellone Preggio,
+278,Villa Il Roseto Loro Ciuffena,
+1077,Villa Femar Cortona,
+1069,Cottage Lombriciano Cortona,
+1067,Villa delle Crete Asciano,
+1068,Casa Ilenia Cortona,
+1056,Borgo delle Spighe Cortona,
+1089,Podere Il Vigneto Montepulciano - Cortona,
+948,Casa di Amici Cortona,
+1076,Casa di Nancy Cortona,
+1072,Il Giardino delle Giare Cortona - Castiglion Fiorentino,
+1101,Villa Severina Cortona,
+1105,Villa I due Casali Cortona - Umbertide,
+1099,La Leopoldina Cortona - Arezzo,4122
+787,Villa Bea Capalbio,
+1108,Casa Maria Rosa Cortona,
+1097,Podere San Gimignanello Rapolano Asciano,
+1118,Villa Isabella Cortona,
+1120,Casa Lamate Localita Ossaia,
+1079,Corte della Luna Cortona,
+1149,Borgo Piazzano Cortona,1914
+729,Villa dei Tramonti Passignano sul Trasimeno,2658

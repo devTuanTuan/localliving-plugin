@@ -134,7 +134,7 @@ add_action('admin_footer', function () {
     ';
 });
 
-function getListAccommodationInCartSearchResult($accommodationIdList, $dateRange = '')
+function getListAccommodationInCartSearchResult($accommodationIdList, $dateRange = '', $persons = 1)
 {
     $result = array();
     
@@ -163,6 +163,14 @@ function getListAccommodationInCartSearchResult($accommodationIdList, $dateRange
             $accommodationSearchResults->from = $dateFrom;
             $accommodationSearchResults->to   = $dateTo;
         }
+	
+	    $personFilter = array(
+		    'AttributeID' => 120,
+		    'AttributeValue' => $persons,
+		    'ComparisonType' => 'GreaterOrEqualThan'
+	    );
+	
+	    $accommodationSearchResults->unitFilters[0] = $personFilter;
         
         $accommodationSearchResults->outParameterList[] = $object_description;
         $accommodationSearchResults->languageID = lemax_two_letter_iso_language_name();
@@ -182,7 +190,7 @@ function getListAccommodationInCartSearchResult($accommodationIdList, $dateRange
     return $result;
 }
 
-function getListAccommodationInCartDetailDescription($accommodationObjectUrl, $dateRange = '')
+function getListAccommodationInCartDetailDescription($accommodationObjectUrl, $dateRange = '', $persons = 1)
 {
     if ($accommodationObjectUrl == '' || empty($accommodationObjectUrl)) {
         return false;
@@ -210,6 +218,8 @@ function getListAccommodationInCartDetailDescription($accommodationObjectUrl, $d
             $accommodationDetailedDescription->from = $dateFrom;
             $accommodationDetailedDescription->to   = $dateTo;
         }
+	
+	    $accommodationDetailedDescription->persons = $persons;
         
         $result = $accommodationDetailedDescription->GetAPIResponse();
         
@@ -232,6 +242,9 @@ function redirect($url)
 }
 	
 function compressImage($originalUrl, $quality = 30) {
+	
+    $destination = '';
+    
     try{
 	    $originalUrl = str_replace(' ', '%20', $originalUrl);
      
@@ -248,10 +261,8 @@ function compressImage($originalUrl, $quality = 30) {
 	        $im->destroy();
         }
     } catch (\Exception $e) {
-        echo "<pre>";
-        print_r($e);
-        echo "</pre>";
-        exit;
+        $pluginClass = $GLOBALS['localliving_plugin'];
+        $pluginClass->write_log($e->getMessage(), 'localliving-plg_generer-pdf.log');
     }
     
     return $destination;
@@ -300,6 +311,7 @@ function pdfGeneration(
     
     foreach ($generatePdfArr as $item) {
         $accommodationIdListWithDateRangeKey[$item['dateRange']][] = $item['accommodationId'];
+	    $accommodationIdListWithDateRangeKey[$item['dateRange']]['selectedPersons'] = $item['selectedPersons'];
         $accommodationIdListWithDateRangeKey[$item['dateRange']] =
             array_unique($accommodationIdListWithDateRangeKey[$item['dateRange']]);
     }
@@ -312,8 +324,15 @@ function pdfGeneration(
     $regionList        = array();
     $destinationList   = array();
     
-    foreach ($accommodationIdListWithDateRangeKey as $dateRange => $accommodationIdList) {
-        $listAccommodationInCartSearchResult = getListAccommodationInCartSearchResult($accommodationIdList, $dateRange);
+    foreach ($accommodationIdListWithDateRangeKey as $dateRange => $values) {
+	    $selectedPersons = $values['selectedPersons'];
+        unset($values['selectedPersons']);
+        
+        $listAccommodationInCartSearchResult = getListAccommodationInCartSearchResult(
+            $values,
+            $dateRange,
+            $selectedPersons
+        );
         
         $accommodationListByDateRange[$dateRange] =
             $listAccommodationInCartSearchResult->AccommodationObjectList->AccommodationObject;
@@ -349,21 +368,46 @@ function pdfGeneration(
             foreach ($unitList as $unitListIndex => $unit) {
                 $unitID = $unit->UnitID;
                 
-                if ($isVilla) {
-                    $unitID = $accommodation->ObjectID;
+                if($unitID <= 0) {
+                    continue;
                 }
+	
+	            if ($isVilla) {
+		            $unitID -= 1;
+	            }
     
                 foreach ($generatePdfArr as $generatePdfItem) {
                     $unitInCart = $unitID == $generatePdfItem['unitID'];
         
                     if ($unitInCart) {
                         $accommodation->UnitList->AccommodationUnit[$generatePdfItem['dateRange']][] = $unit;
+//	                    $unit->DateRange = $generatePdfItem['dateRange'];
                     }
         
                     unset($accommodation->UnitList->AccommodationUnit[$unitListIndex]);
                 }
             }
         }
+    }
+    
+    $unitListWithDateRangeKey = array();
+    
+    foreach ($accommodationList as $accommodation) {
+        $objectId   = $accommodation->ObjectID;
+	    $unitList   = $accommodation->UnitList->AccommodationUnit;
+        $dateRanges = array_keys($unitList);
+        
+        foreach ($dateRanges as $dateRange) {
+	        $unitListWithDateRangeKey[$objectId][$dateRange] = $unitList[$dateRange];
+        }
+    }
+	
+	foreach ($accommodationList as $accommodation) {
+		$objectId = $accommodation->ObjectID;
+		
+		unset($accommodation->UnitList->AccommodationUnit);
+		
+		$accommodation->UnitList->AccommodationUnit = $unitListWithDateRangeKey[$objectId];
     }
     
     //remove duplicate ObjectID if any
@@ -391,7 +435,9 @@ function pdfGeneration(
                         'B' => 'Merriweather-Bold.ttf',
                     ],
                 ],
-            'default_font' => 'opensans'
+            'default_font' => 'opensans',
+	        'mode'   => 'utf-8',
+	        'format' => [210, 310]
         ]);
     
         $mpdf->useSubstitutions = false;
@@ -475,20 +521,23 @@ function pdfGeneration(
             $accommodationUrl = '#';
             if (isset($accommodation->UnitList->AccommodationUnit)) {
                 $explodedDateRange = explode('-', array_key_first($accommodation->UnitList->AccommodationUnit));
-        
-                $dateFrom  = date_create_from_format(
-                    'd/m/Y',
-                    $explodedDateRange[0]
-                );
-                $dateTo    = date_create_from_format(
-                    'd/m/Y',
-                    $explodedDateRange[1]
-                );
-                $accommodationUrl =
-                    get_home_url().
-                    $accommodation->ObjectURL.
-                    '?dateFrom=' . $dateFrom->format('Y-m-d') .
-                    '&dateTo=' . $dateTo->format('Y-m-d');
+	
+	            $dateFrom  = date_create_from_format(
+		            'd/m/Y',
+		            $explodedDateRange[0]
+	            );
+	            $dateTo    = date_create_from_format(
+		            'd/m/Y',
+		            $explodedDateRange[1]
+	            );
+                
+                if($dateFrom && $dateTo) {
+	                $accommodationUrl =
+		                get_home_url().
+		                $accommodation->ObjectURL.
+		                '?dateFrom=' . $dateFrom->format('Y-m-d') .
+		                '&dateTo=' . $dateTo->format('Y-m-d');
+                }
             }
             $htmlPageGreetingFooter .=
                 '<li><a href="'.$accommodationUrl.'" target="_blank">'.$accommodationCount.'. '.$accommodation->Name.'</a></li>';
@@ -525,8 +574,8 @@ function pdfGeneration(
         '
         <div class="user-info">
             <div class="user-info-desc">
-                <h1 class="text-primary">' . nl2br(mb_strtoupper($pdfOpening,"UTF-8")) . '</h1>
-                <p>' . nl2br($pdfDescription) . '</p>
+                <h1 class="text-primary">' . stripslashes(nl2br(mb_strtoupper($pdfOpening,"UTF-8"))) . '</h1>
+                <p>' . stripslashes(nl2br($pdfDescription)) . '</p>
             </div>
             <div class="user-info-contact">
                 <img width="150" src="'.WP_PLUGIN_DIR.'/localliving-plugin/assets/images/pdf/avatar.png"/>
@@ -585,7 +634,6 @@ function pdfGeneration(
             </div>
         </htmlpagefooter>
         ';
-    
         $pdfStyle = '';
         include_once WP_PLUGIN_DIR . '/localliving-plugin/assets/style/pdf_style.php';
         $mpdf->WriteHTML($pdfStyle, \Mpdf\HTMLParserMode::HEADER_CSS);
@@ -598,7 +646,7 @@ function pdfGeneration(
         $mpdf->WriteHTML($htmlGreetingPage);
         $mpdf->WriteHTML($htmlPageGreetingFooter);
         $mpdf->SetHTMLFooterByName('MyFooterGreeting');
-    
+	    
         if (count($accommodationList) > 0) {
             foreach ($accommodationList as $accommodation) {
                 $accommodationName             = $accommodation->Name;
@@ -616,12 +664,11 @@ function pdfGeneration(
                         $accommodationNumberOfStars = $accommodationAttribute->AttributeValue;
                     }
                 }
-            
-            
+                
                 $accommodationObjUrl              = $accommodation->ObjectURL;
                 $dateRange                        = array_key_first($accommodation->UnitList->AccommodationUnit);
-                $accommodationDetailedDescription =
-                    getListAccommodationInCartDetailDescription($accommodationObjUrl, $dateRange);
+                $selectedPersons                  =
+                    $accommodation->UnitList->AccommodationUnit[$dateRange][0]->CalculatedPriceInfo->NumberOfPersons;
             
                 $accommodationRegionID   = 0;
                 $accommodationRegionName = '';
@@ -679,13 +726,14 @@ function pdfGeneration(
                         'd/m/Y',
                         $explodedDateRange[1]
                     );
-                    $accommodationUrl =
-                        get_home_url().
-                        $accommodationObjUrl .
-                        '?dateFrom=' . $dateFrom->format('Y-m-d') .
-                        '&dateTo=' . $dateTo->format('Y-m-d');
+                    if($dateFrom && $dateTo) {
+	                    $accommodationUrl =
+		                    get_home_url().
+		                    $accommodationObjUrl .
+		                    '?dateFrom=' . $dateFrom->format('Y-m-d') .
+		                    '&dateTo=' . $dateTo->format('Y-m-d');
+                    }
                 }
-                
                 
                 $htmlAccommodationPage = '<div class="stars">';
                 $starsDouble = doubleval($accommodationNumberOfStars);
@@ -708,7 +756,6 @@ function pdfGeneration(
 	                $htmlAccommodationPage .= '<div class="gallery-main">';
 	                $htmlAccommodationPage .= '<img width="470px" height="312px" src="'.$compressedImgUrl.'"/>';
 	                $htmlAccommodationPage .= '</div>';
-//                    unlink($compressedImgUrl);
                 }
                 $htmlAccommodationPage .= '<div class="gallery-sub">';
                 if(isset($accommodation->PhotoList->Photo[1]->PhotoUrl)) {
@@ -717,7 +764,6 @@ function pdfGeneration(
 	                $htmlAccommodationPage .= '<div class="gallery-sub-image">';
 	                $htmlAccommodationPage .= '<img width="223px" height="148px" src="'.$compressedImgUrl.'"/>';
 	                $htmlAccommodationPage .= '</div>';
-//	                unlink($compressedImgUrl);
                 }
                 if(isset($accommodation->PhotoList->Photo[2]->PhotoUrl)) {
 	                $compressedImgUrl =
@@ -725,7 +771,6 @@ function pdfGeneration(
 	                $htmlAccommodationPage .= '<div class="gallery-sub-image">';
 	                $htmlAccommodationPage .= '<img width="223px" height="148px" src="'.$compressedImgUrl.'"/>';
 	                $htmlAccommodationPage .= '</div>';
-//	                unlink($compressedImgUrl);
                 }
                 $htmlAccommodationPage .= '</div>';
                 $htmlAccommodationPage .= '</div>';
@@ -778,6 +823,9 @@ function pdfGeneration(
                         
                         foreach ($accommodationUnitList as $dateRange => $accommodationUnitArr) {
 	                        $autoIncrementIndex++;
+	
+	                        $accommodationDetailedDescription =
+		                        getListAccommodationInCartDetailDescription($accommodationObjUrl, $dateRange, $selectedPersons);
                             
                             $explodedDateRange = explode('-', $dateRange);
                             
@@ -1030,12 +1078,10 @@ function pdfGeneration(
                                 ';
                                 }
                                 
-                                $extraCostsDescriptionLine1        = preg_split('#\r?\n#', ltrim(strip_tags($extraCostsDescription)), 0)[0];
-//                                $shortedExtraCostsDescriptionLine1 = strlen($extraCostsDescriptionLine1) > 100 ?
-//                                    substr($extraCostsDescriptionLine1, 0, 100)."..." : $extraCostsDescriptionLine1;
-                                $extraCostsDescriptionLine2        = preg_split('#\r?\n#', ltrim(strip_tags($extraCostsDescription)), 0)[1];
-//                                $shortedExtraCostsDescriptionLine2 = strlen($extraCostsDescriptionLine2) > 100 ?
-//                                    substr($extraCostsDescriptionLine2, 0, 100)."..." : $extraCostsDescriptionLine2;
+                                $extraCostsDescriptionLine1
+                                    = preg_split('#\r?\n#', ltrim(strip_tags($extraCostsDescription)), 0)[0];
+                                $extraCostsDescriptionLine2
+                                    = preg_split('#\r?\n#', ltrim(strip_tags($extraCostsDescription)), 0)[1];
                                 
                                 $htmlAccommodationUnit .= '<td align="right"><a class="booking" href="'.$accommodationBookingAddress.'" target="_blank">BOOK NU</a></td>
                             </tr>
@@ -1090,9 +1136,11 @@ function pdfGeneration(
             PDF_LOGS . $folder . '/' . $fileName,
             \Mpdf\Output\Destination::FILE
         );
-    } catch (MpdfException $e) {
-        var_dump($e);
-        die;
+    } catch (\Exception $e) {
+	    $pluginClass = $GLOBALS['localliving_plugin'];
+     
+	    $pluginClass->write_log(json_encode($generatePdfArr), 'localliving-plg_generer-pdf.log');
+	    $pluginClass->write_log($e->getMessage(), 'localliving-plg_generer-pdf.log');
     }
     
     //clear cart
@@ -1252,15 +1300,18 @@ if (isset($_POST['GeneratePdf'])) {
 		        $generatePdfArr = array();
 		
 		        foreach ($cart as $dateRange => $selectedAccommodation) {
+                    $selectedPersons = $selectedAccommodation['selectedPersons'];
+                    unset($selectedAccommodation['selectedPersons']);
 			        foreach ($selectedAccommodation as $selectedAccommodationId => $selectedUnitIdList) {
+            
 				        foreach ($selectedUnitIdList as $index => $selectedUnitId) {
-					        $tmp = array(
-						        'unitID'          =>  $selectedUnitId,
-						        'accommodationId' => $selectedAccommodationId,
-						        'dateRange'       => $dateRange
-					        );
 					
-					        $generatePdfArr[] = $tmp;
+					        $generatePdfArr[] = array(
+						        'unitID'          => $selectedUnitId,
+						        'accommodationId' => $selectedAccommodationId,
+						        'dateRange'       => $dateRange,
+						        'selectedPersons' => $selectedPersons[$selectedAccommodationId] ?? 1
+					        );
 				        }
 			        }
 		        }
@@ -1298,14 +1349,14 @@ if (isset($_POST['GeneratePdf'])) {
 
 if (isset($_POST['SendMail'])) {
     $action = $_POST['SendMail'];
-    
+
     if($action === 'SendMail') {
 	    $receiverName             = $_POST['EmailReceiverName'] ?? '';
 	    $receiverMail             = $_POST['EmailReceiverMail'] ?? '';
-	
+
 	    if($receiverName != '' && $receiverMail != '') {
 		    openSendMailPopup($receiverMail);
-		
+
 		    redirect('/wp-admin/admin.php?page=tilbud');
         }
     }
@@ -1330,17 +1381,21 @@ if (isset($_POST['SendMail'])) {
         <div class="home-icon">
             <span class="cart-item-counter">
                 <?php
-                    $total = 0;
-    
-                    if (isset($_SESSION['localliving_cart'])) {
-                        $cart = $_SESSION['localliving_cart'];
-        
-                        foreach ($cart as $selectedAccommodation) {
-                            $total += count($selectedAccommodation);
-                        }
-                    }
-
-                    echo $total;
+	                $total = 0;
+	
+	                if (isset($_SESSION['localliving_cart'])) {
+		                $cart = $_SESSION['localliving_cart'];
+		
+		                foreach ($cart as $selectedAccommodations) {
+			                foreach ($selectedAccommodations as $key => $selectedAccommodation) {
+				                if(is_numeric($key)) {
+					                $total += 1;
+				                }
+			                }
+		                }
+	                }
+	
+	                echo $total;
                 ?>
             </span>
             <a href="?page=generer_pdf">
@@ -1456,7 +1511,11 @@ if (isset($_POST['SendMail'])) {
                         if (isset($_SESSION['localliving_cart'])) {
                             $cart = $_SESSION['localliving_cart'];
                             $totalResult = 0;
+                            
                             foreach ($cart as $dateRange => $accommodationObj) {
+                                $selectedPersonsArr = $accommodationObj['selectedPersons'];
+	                            unset($accommodationObj['selectedPersons']);
+                             
 	                            $totalResult += count($accommodationObj);
                                 if (count($accommodationObj) > 0) {
                                     echo '<section data-date-range="'.$dateRange.'">';
@@ -1479,38 +1538,52 @@ if (isset($_POST['SendMail'])) {
                                         <h2>'.ucfirst($dateFrom)." – ".ucfirst($dateTo).'</h2>
                                     </div>
                                     ';
-        
-                                        $accommodationSearchResults = new iTravelAPI\GetSearchResults();
-                                        $object_description = array(
-                                            'ResponseDetail' => 'ObjectDescription',
-                                            'NumberOfResults' => '1'
-                                        );
-        
-                                        $objectIDList = array();
-        
-                                        foreach ($accommodationObj as $accommodationID => $unitID) {
-                                            $objectIDList[] = $accommodationID;
-                                        }
-        
-                                        $accommodationSearchResults->from = date_create_from_format(
-                                            'd/m/Y',
-                                            $dateRangeArr[0]
-                                        )->setTime(0, 0);
-                                        $accommodationSearchResults->to = date_create_from_format(
-                                            'd/m/Y',
-                                            $dateRangeArr[1]
-                                        )->setTime(0, 0);
-                                        $accommodationSearchResults->objectIDList = $objectIDList;
-                                        $accommodationSearchResults->outParameterList[] = $object_description;
-                                        $accommodationSearchResults->languageID = lemax_two_letter_iso_language_name();
-                                        //$accommodationSearchResults->pageSize = 20;
-                                        //$accommodationSearchResults->currencyID = 208;
-                                        $accommodationSearchResults->currencyID = iTravelGeneralSettings::GetCurrencyID(lemax_two_letter_iso_language_name());
-                                        $accommodationSearchResults->thumbnailWidth = 140;
-                                        $accommodationSearchResults->thumbnailHeight = 100;
-                                        $accommodationSearchResults->xsltPath =
-                                            iTravelGeneralSettings::$iTravelXSLTAccommodationCartPath;
-                                        $accommodationSearchResults->EchoSearchResults(array(), $dateRange);
+	                                    foreach ($accommodationObj as $accommodationID => $unitID) {
+		                                    $selectedPersons = $selectedPersonsArr[$accommodationID] ?? 1;
+		
+		                                    $accommodationSearchResults = new iTravelAPI\GetSearchResults();
+		                                    $object_description = array(
+			                                    'ResponseDetail' => 'ObjectDescription',
+			                                    'NumberOfResults' => '1'
+		                                    );
+		
+//		                                    $objectIDList    = array();
+//		                                    $selectedPersons = $selectedPersonsArr[$accommodationID] ?? 1;
+		
+//		                                    foreach ($accommodationObj as $accommodationID => $unitID) {
+//			                                    $objectIDList[] = $accommodationID;
+//			                                    $selectedPersons = $selectedPersonsArr[$accommodationID];
+//		                                    }
+		
+		                                    $personFilter = array(
+			                                    'AttributeID' => 120,
+			                                    'AttributeValue' => (int) $selectedPersons,
+			                                    'ComparisonType' => 'GreaterOrEqualThan'
+		                                    );
+		
+		                                    $accommodationSearchResults->unitFilters[0] = $personFilter;
+		
+		                                    $accommodationSearchResults->from = date_create_from_format(
+			                                    'd/m/Y',
+			                                    $dateRangeArr[0]
+		                                    )->setTime(0, 0);
+		                                    $accommodationSearchResults->to = date_create_from_format(
+			                                    'd/m/Y',
+			                                    $dateRangeArr[1]
+		                                    )->setTime(0, 0);
+		                                    $accommodationSearchResults->objectIDList = array($accommodationID);
+		                                    $accommodationSearchResults->outParameterList[] = $object_description;
+		                                    $accommodationSearchResults->languageID = lemax_two_letter_iso_language_name();
+		                                    //$accommodationSearchResults->pageSize = 20;
+		                                    //$accommodationSearchResults->currencyID = 208;
+		                                    $accommodationSearchResults->currencyID = iTravelGeneralSettings::GetCurrencyID(lemax_two_letter_iso_language_name());
+		                                    $accommodationSearchResults->thumbnailWidth = 140;
+		                                    $accommodationSearchResults->thumbnailHeight = 100;
+		                                    $accommodationSearchResults->xsltPath =
+			                                    iTravelGeneralSettings::$iTravelXSLTAccommodationCartPath;
+		                                    $accommodationSearchResults->pageSize = 1;
+		                                    $accommodationSearchResults->EchoSearchResults(array(), $dateRange);
+	                                    }
                                     }
                                     echo '</section>';
                                 }

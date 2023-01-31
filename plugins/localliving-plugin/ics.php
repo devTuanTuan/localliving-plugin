@@ -1,7 +1,7 @@
 <?php
 class ics {
 	/* Function is to get all the contents from ics and explode all the datas according to the events and its sections */
-	function getIcsEventsAsArray($file) {
+	public function getIcsEventsAsArray($file) {
 		$icalString = @file_get_contents ( $file );
 		$icsDates = array ();
 		/* Explode the ICs Data to get datas as array according to string ‘BEGIN:’ */
@@ -26,7 +26,7 @@ class ics {
 	}
 	
 	/* funcion is to avaid the elements wich is not having the proper start, end  and summary informations */
-	function getICSDates($key, $subKey, $subValue, $icsDates) {
+	public function getICSDates($key, $subKey, $subValue, $icsDates) {
 		if ($key != 0 && $subKey == 0) {
 			$icsDates [$key] ["BEGIN"] = $subValue;
 		} else {

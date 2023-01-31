@@ -1,9 +1,10 @@
-._.DS_Store
-/.idea
+.idea
 **/node_modules
 .env
 composer.lock
+package-lock.json
 vendor
 release
 /dist
 **/.unison.*
+*.DS_Store

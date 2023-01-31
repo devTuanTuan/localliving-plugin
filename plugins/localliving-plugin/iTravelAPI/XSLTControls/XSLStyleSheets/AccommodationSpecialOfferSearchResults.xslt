@@ -246,7 +246,7 @@
 					</xsl:variable>					
 					<article class="row search-results-row">
 						<div class="col-md-3">
-							<a href="{$objectFinalURL}" title="{$AccommodationName}">
+							<a href="{$ImageSource}" title="{$AccommodationName}" data-toggle="lightbox">
 								<img class="lazy" data-src="{$ImageSource}">
 									<xsl:attribute name="alt">
 										<xsl:choose>

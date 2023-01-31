@@ -11,7 +11,7 @@
 	require_once(ABSPATH . 'wp-admin/admin.php');
 	require_once(ABSPATH . 'wp-admin/admin-header.php');
 
-//reset button script
+    //reset button script
 	add_action('admin_footer', function () {
 		echo
 		'
@@ -28,7 +28,7 @@
     ';
 	});
 
-//add to cart script
+    //add to cart script
 	add_action('admin_footer', function () {
 		$cartJsonEncoded = '';
 		
@@ -45,10 +45,11 @@
            $(document).on("click", ".add-to-cart", function(e) {
                e.preventDefault();
                
-               var objectId = $(this).data("object-id");
-               var unitId   = $(this).data("unit-id");
-               var dateFrom = $("input[name=dateFrom]").val();
-               var dateTo   = $("input[name=dateTo]").val();
+               var objectId         = $(this).data("object-id");
+               var unitId           = $(this).data("unit-id");
+               var dateFrom         = $("input[name=dateFrom]").val();
+               var dateTo           = $("input[name=dateTo]").val();
+               var selectedPersons  = $("input[name=selectedPersons]").val();
                
                var unitIDList = [];
                
@@ -74,7 +75,8 @@
                    objectId: objectId,
                    unitId: unitId,
                    dateFrom: dateFrom,
-                   dateTo: dateTo
+                   dateTo: dateTo,
+                   selectedPersons: selectedPersons
                 },
                 context: this,
                 success: function(response) {
@@ -129,35 +131,37 @@
                                 selectingDateTo = getDayAsString(true);
                             }
                             
-                            $.map(arrayLv2, function( itemLv2 ) {
-                                if(itemLv2.v2) {
-                                    var key2 = itemLv2.k2;
-                                }
-                                
-                                if(dateFrom === selectingDateFrom && dateTo === selectingDateTo) {
-                                    var listOfAddToCartBtnByObj = $(".add-to-cart[data-object-id=" + key2 + "]");
+                            if(arrayLv2) {
+                                $.map(arrayLv2, function( itemLv2 ) {
+                                    if(itemLv2.v2) {
+                                        var key2 = itemLv2.k2;
+                                    }
                                     
-                                    listOfAddToCartBtnByObj.map(function() {
-                                        var unitIdOfBtn = $(this).attr("data-unit-id");
-                                        if(typeof unitIdOfBtn === "undefined" || unitIdOfBtn === false) {
-                                            $(this).removeClass("add-to-cart").addClass("remove-from-cart");
-                                            $(this).text("Valgt");
-                                        }
-                                    });
-                                    
-                                    $.map(itemLv2.v2, function( tmp ) {
-                                        if(tmp === key2) {
-                                            var objectAddToCartBtn = $(".add-to-cart[data-object-id=" + tmp + "]");
-                                            objectAddToCartBtn.removeClass("add-to-cart").addClass("remove-from-cart");
-                                            objectAddToCartBtn.text("Valgt");
-                                        } else {
-                                            var unitAddToCartBtn = $(".add-to-cart[data-unit-id=" + tmp + "]");
-                                            unitAddToCartBtn.removeClass("add-to-cart").addClass("remove-from-cart");
-                                            unitAddToCartBtn.text("Valgt");
-                                        }
-                                    });
-                                }
-                            });
+                                    if(dateFrom === selectingDateFrom && dateTo === selectingDateTo) {
+                                        var listOfAddToCartBtnByObj = $(".add-to-cart[data-object-id=" + key2 + "]");
+                                        
+                                        listOfAddToCartBtnByObj.map(function() {
+                                            var unitIdOfBtn = $(this).attr("data-unit-id");
+                                            if(typeof unitIdOfBtn === "undefined" || unitIdOfBtn === false) {
+                                                $(this).removeClass("add-to-cart").addClass("remove-from-cart");
+                                                $(this).text("Valgt");
+                                            }
+                                        });
+                                        
+                                        $.map(itemLv2.v2, function( tmp ) {
+                                            if(tmp === key2) {
+                                                var objectAddToCartBtn = $(".add-to-cart[data-object-id=" + tmp + "]");
+                                                objectAddToCartBtn.removeClass("add-to-cart").addClass("remove-from-cart");
+                                                objectAddToCartBtn.text("Valgt");
+                                            } else {
+                                                var unitAddToCartBtn = $(".add-to-cart[data-unit-id=" + tmp + "]");
+                                                unitAddToCartBtn.removeClass("add-to-cart").addClass("remove-from-cart");
+                                                unitAddToCartBtn.text("Valgt");
+                                            }
+                                        });
+                                    }
+                                });
+                            }
                         }
                     });
                 }
@@ -182,7 +186,7 @@
     </script>';
 	});
 
-//remove from cart script
+    //remove from cart script
 	add_action('admin_footer', function () {
 		echo
 			'
@@ -253,7 +257,7 @@
     ';
 	});
 
-//loading script for viewAClass option
+    //loading script for viewAClass option
 	add_action('admin_footer', function () {
 		$viewAClass = '0';
         if(isset($_POST['viewAClass'])) {
@@ -820,16 +824,17 @@
 	                echo 'checked="checked"';
                 }
 			}
-            if($isDefaultView && $optionName === "viewAClass") {
-	            echo 'checked="checked"';
-            }
+//            if($isDefaultView && $optionName === "viewAClass") {
+//	            echo 'checked="checked"';
+//            }
 			echo '/>';
 			echo '<input class="view-options-hidden-input" type="hidden" name="' . $optionName . '" value="';
-			if(($isDefaultView && $optionName === "viewAClass") || $optionValue === '1') {
-				echo '1';
-			} else {
-                echo '0';
-            }
+//			if(($isDefaultView && $optionName === "viewAClass") || $optionValue === '1') {
+//				echo '1';
+//			} else {
+//                echo '0';
+//            }
+            echo $optionValue;
             echo '"/>';
 			echo $optionLabel;
 			echo '</label>';
@@ -845,9 +850,9 @@
 		$table_name = $wpdb->prefix . 'localliving_plg_offer_list';
 		
 		$tilbudStatusArr = array(
-			'red' => 'tilbud uden aktion de sidste 5 dage',
+			'green' => 'lukkede tilbud',
 			'yellow' => 'tilbud som mangler afgørelse',
-			'green' => 'lukkede tilbud'
+			'red' => 'tilbud uden aktion de sidste 5 dage'
 		);
 		
 		foreach ($tilbudStatusArr as $status => $label) {
@@ -936,7 +941,7 @@
             <div class="loader"></div>
         </div>
     </div>
-    <div class="localliving-dashboard">
+    <div class="localliving-dashboard" style="display:none">
         <div class="header sticky top-menu">
             <div class="page-title top-menu-left">
                 <h1>Tilbudsgenerator</h1>
@@ -955,8 +960,12 @@
 	                if (isset($_SESSION['localliving_cart'])) {
 		                $cart = $_SESSION['localliving_cart'];
 		
-		                foreach ($cart as $selectedAccommodation) {
-			                $total += count($selectedAccommodation);
+		                foreach ($cart as $selectedAccommodations) {
+                            foreach ($selectedAccommodations as $key => $selectedAccommodation) {
+                                if(is_numeric($key)) {
+	                                $total += 1;
+                                }
+                            }
 		                }
 	                }
 	
@@ -1248,15 +1257,15 @@
 								$accommodationSearchResults->xsltPath =
 									iTravelGeneralSettings::$iTravelXSLTAccommodationSearchResultsPath;
                                 
-                                $isDefaultView = !isset($_POST['viewAClass']) &&
-                                    !isset($_POST['viewSpecialOfferOnly']) &&
-	                                !isset($_POST['viewFullUnits']);
-                                
-                                if($isDefaultView) {
-	                                $accommodationSearchResults->pageSize = 10000;
-	                                $accommodationSearchResults->xsltPath =
-		                                iTravelGeneralSettings::$iTravelXSLTAccommodationSearchResultsABClassPath;
-                                }
+//                                $isDefaultView = !isset($_POST['viewAClass']) &&
+//                                    !isset($_POST['viewSpecialOfferOnly']) &&
+//	                                !isset($_POST['viewFullUnits']);
+//
+//                                if($isDefaultView) {
+//	                                $accommodationSearchResults->pageSize = 10000;
+//	                                $accommodationSearchResults->xsltPath =
+//		                                iTravelGeneralSettings::$iTravelXSLTAccommodationSearchResultsABClassPath;
+//                                }
                                 
 								if (isset($_POST['viewAClass'])) {
 									$viewAClass = $_POST['viewAClass'];
@@ -1285,6 +1294,8 @@
 											iTravelGeneralSettings::$iTravelXSLTAccommodationSearchResultsFullUnitsPath;
 									}
 								}
+								$accommodationSearchResults->thumbnailWidth  = 1000;
+								$accommodationSearchResults->thumbnailHeight = 800;
 								$accommodationSearchResults->EchoSearchResults();
 							}
 						?>
@@ -1295,6 +1306,8 @@
                    value="<?php echo $_POST['dateFrom'] ?? date("d/m/Y") ?>"/>
             <input type="hidden" id="dateTo" name="dateTo"
                    value="<?php echo $_POST['dateTo'] ?? date("d/m/Y", strtotime("+7 day")) ?>"/>
+            <input type="hidden" id="selectedPersons" name="selectedPersons"
+                   value="<?php echo $_POST['persons'] ?? 1 ?>"/>
             <input type="hidden" id="sortByPrice" name="sortByPrice" value="<?php echo $_POST['sortByPrice'] ?? '' ?>"/>
             <input type="hidden" id="sortByStars" name="sortByStars" value="<?php echo $_POST['sortByStars'] ?? '' ?>"/>
         </form>

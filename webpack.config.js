@@ -43,6 +43,22 @@ module.exports = (env) => {
             from: path.resolve(__dirname, './node_modules/moment'),
             to: outputDir + '/assets/moment',
           },
+          {
+            from: path.resolve(__dirname, './node_modules/bs5-lightbox'),
+            to: outputDir + '/assets/bs5-lightbox',
+          },
+          {
+            from: path.resolve(__dirname, './node_modules/puppeteer'),
+            to: outputDir + '/assets/puppeteer',
+          },
+          {
+            from: path.resolve(__dirname, './node_modules/puppeteer-core'),
+            to: outputDir + '/assets/puppeteer-core',
+          },
+          {
+            from: path.resolve(__dirname, './assets/js/auto_upload_puppeteer.js'),
+            to: outputDir + '/assets/auto_upload_puppeteer.js',
+          },
         ],
       }),
     ],

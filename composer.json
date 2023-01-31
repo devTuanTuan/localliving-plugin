@@ -4,6 +4,7 @@
         "mpdf/mpdf": "^8.0",
     "ext-mbstring": "*",
     "league/csv": "^8.0",
-    "ext-imagick": "*"
+    "ext-imagick": "*",
+    "ext-ftp": "*"
   }
 }

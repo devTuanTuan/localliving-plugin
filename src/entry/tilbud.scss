@@ -53,6 +53,11 @@
           background-size: contain;
         }
       }
+      &[data-color='grey'] {
+        .select2-container--default .select2-selection--single .select2-selection__rendered::after {
+          background: #bababa;
+        }
+      }
       select {
         width: 100%;
       }
@@ -142,6 +147,11 @@
           &[id$='black'] {
             &:after {
               background-color: #000;
+            }
+          }
+          &[id$='grey'] {
+            &:after {
+              background-color: #bababa;
             }
           }
           &[id$='oyr'] {

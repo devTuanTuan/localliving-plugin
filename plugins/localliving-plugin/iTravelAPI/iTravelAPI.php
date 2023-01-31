@@ -621,17 +621,17 @@ class GetSearchResults
 				            $searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject;
 			
 			            //reorder by the cart
-			            foreach ($cart as $selectedAccommodation) {
-				            $selectedAccommodationIds = array_keys($selectedAccommodation);
-				
-				            foreach ($selectedAccommodationIds as $index => $selectedAccommodationId) {
-					            foreach ($accommodationObjectList as $value) {
-						            if($value->ObjectID == $selectedAccommodationId) {
-							            $searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject[$index] = $value;
-						            }
-					            }
-				            }
-			            }
+//			            foreach ($cart as $selectedAccommodation) {
+//				            $selectedAccommodationIds = array_keys($selectedAccommodation);
+//
+//				            foreach ($selectedAccommodationIds as $index => $selectedAccommodationId) {
+//					            foreach ($accommodationObjectList as $value) {
+//						            if($value->ObjectID == $selectedAccommodationId) {
+//							            $searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject[$index] = $value;
+//						            }
+//					            }
+//				            }
+//			            }
 		            }
 	            }
 
@@ -807,17 +807,19 @@ class GetSearchResults
                             }
 							
 							//reorder by the cart
-							foreach ($cart as $selectedAccommodation) {
-								$selectedAccommodationIds = array_keys($selectedAccommodation);
-								
-								foreach ($selectedAccommodationIds as $index => $selectedAccommodationId) {
-									foreach ($accommodationObjectList as $value) {
-										if($value->ObjectID == $selectedAccommodationId) {
-											$searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject[$index] = $value;
-										}
-									}
-								}
-							}
+//							foreach ($cart as $selectedAccommodation) {
+//								unset($selectedAccommodation['selectedPersons']);
+//
+//								$selectedAccommodationIds = array_keys($selectedAccommodation);
+//
+//								foreach ($selectedAccommodationIds as $index => $selectedAccommodationId) {
+//									foreach ($accommodationObjectList as $value) {
+//										if($value->ObjectID == $selectedAccommodationId) {
+//											$searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject[$index] = $value;
+//										}
+//									}
+//								}
+//							}
                         }
                     }
     
@@ -1000,42 +1002,44 @@ class GetSearchResults
 				}
 			}
             
-            if ($page == 'localliving' && ($isDefaultView || $_POST['viewAClass'] == "1")) {
-                if (isset($searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject)) {
-                    $accommodationObjectList =
-                        $searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject;
-                    
-                    $aClassAccommodationList = array();
-                    $bClassAccommodationList = array();
-                    
-                    foreach ($accommodationObjectList as $accommodationObject) {
-                        $categoryList = $accommodationObject->CategoryList->Category ?? array();
-                        
-                        $isAClassAccommodation = false;
-                        
-                        foreach ($categoryList as $category) {
-                            $isAClassAccommodation = $category->CategoryID == 42;
-                        }
-                        
-                        if ($isAClassAccommodation) {
-                            $aClassAccommodationList[] = $accommodationObject;
-                        } else {
-                            $bClassAccommodationList[] = $accommodationObject;
-                        }
-                    }
-                    
-                    
-                    unset($searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject);
-                    
-                    $searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject
-                        = new \stdClass();
-                    
-                    $searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject->AClass
-                        = $aClassAccommodationList;
-                    
-                    $searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject->BClass
-                        = $bClassAccommodationList;
-                }
+            if ($page == 'localliving' && isset($_POST['viewAClass'])) {
+				if($_POST['viewAClass'] == "1") {
+					if (isset($searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject)) {
+						$accommodationObjectList =
+							$searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject;
+						
+						$aClassAccommodationList = array();
+						$bClassAccommodationList = array();
+						
+						foreach ($accommodationObjectList as $accommodationObject) {
+							$categoryList = $accommodationObject->CategoryList->Category ?? array();
+							
+							$isAClassAccommodation = false;
+							
+							foreach ($categoryList as $category) {
+								$isAClassAccommodation = $category->CategoryID == 42;
+							}
+							
+							if ($isAClassAccommodation) {
+								$aClassAccommodationList[] = $accommodationObject;
+							} else {
+								$bClassAccommodationList[] = $accommodationObject;
+							}
+						}
+						
+						
+						unset($searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject);
+						
+						$searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject
+							= new \stdClass();
+						
+						$searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject->AClass
+							= $aClassAccommodationList;
+						
+						$searchResultsResponse->GetSearchResultsResult->AccommodationObjectList->AccommodationObject->BClass
+							= $bClassAccommodationList;
+					}
+				}
             }
         }
         

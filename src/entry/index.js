@@ -4,6 +4,7 @@ import './search-result.scss';
 import './cart.scss';
 import './tilbud.scss';
 import './ferieboliger.scss';
+import './terretrusche-property-mapping.scss';
 import './multi-select';
 var $ = jQuery.noConflict();
 
@@ -11,6 +12,15 @@ var $ = jQuery.noConflict();
 window.addEventListener('DOMContentLoaded', function (event) {
   setTimeout(() => {
     document.querySelector('.loading-first-wrapper').classList.add('hided');
+    if (document.querySelector('.localliving-dashboard')) {
+      document.querySelector('.localliving-dashboard').style.display = 'block';
+    }
+    if (document.querySelector('.localliving-tilbud')) {
+      document.querySelector('.localliving-tilbud').style.display = 'block';
+    }
+    if (document.querySelector('.localliving-ferieboliger')) {
+      document.querySelector('.localliving-ferieboliger').style.display = 'block';
+    }
   }, 500);
 });
 
@@ -328,4 +338,18 @@ $(document).ready(function () {
   }
 
   $('.toggle-input').bootstrapToggle();
+
+  $('#generate-csv-year-input').datepicker({
+    format: 'yyyy',
+    viewMode: 'years',
+    minViewMode: 'years',
+    maxViewMode: 'decades',
+    autoclose: true,
+    todayHighlight: true,
+    showButtonPanel: true,
+    changeMonth: true,
+    changeYear: true,
+    container: '.download-csv',
+    orientation: 'bottom left',
+  });
 });
